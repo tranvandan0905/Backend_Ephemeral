@@ -1,0 +1,31 @@
+services:
+  mongoa:
+    image: mongo:6.0
+    container_name: ephemeral_mongodb
+    restart: unless-stopped
+    ports: 
+        - "27017:27017"
+    networks:
+      - ephemeral-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${USER_DB}
+      MONGO_INITDB_ROOT_PASSWORD: ${PASSWORD_DB}
+    volumes:
+      - mongodb-data:/data/db
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --username ${USER_DB} --password ${PASSWORD_DB} --eval 'db.adminCommand(\"ping\")' || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+volumes:
+  mongodb-data:
+
+networks:
+  ephemeral-net:
+    driver: bridge
