@@ -69,7 +69,31 @@ const createRoom = async (userId, roomData) => {
     throw new Error("Không thể tạo room");
   }
 };
+const getRoomByRoomId = async (roomId) => {
+  try {
+    const room = await Room.findOne({ roomId })
+      .populate("createdBy", "displayName avatarUrl");
 
+    if (!room) return null;
+    const roomData = {
+      roomId: room.roomId,
+      name: room.name,
+      description: room.description,
+      avatar: room.avatar,
+      qrCode: room.qrCode,
+      isPrivate: room.isPrivate,
+      expiresAt: room.expiresAt,
+      createdBy: room.createdBy,
+      usersCount: room.usersCount,
+      createdAt: room.createdAt,
+    };
+
+    return roomData;
+  } catch (error) {
+    console.error("Lỗi trong service getRoomByRoomId:", error);
+    throw error;
+  }
+};
 module.exports = {
-  createRoom,
+  createRoom,getRoomByRoomId
 };
