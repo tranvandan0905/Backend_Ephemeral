@@ -31,7 +31,7 @@ const createRoom = async (userId, roomData) => {
     const roomId = nanoid(10);
 
     // Tạo QR code cho room
-    const qrCode = await generateRoomQRCode( roomId);
+    const qrCode = await generateRoomQRCode(roomId);
 
     // Validate expiresAt 
     const expireDate = expiresAt ? new Date(expiresAt) : null;
@@ -58,6 +58,7 @@ const createRoom = async (userId, roomData) => {
         userId,
         avatar: user.avatarUrl,
         nickname: user.displayName,
+        expiresAt:expireDate,
         role: "creator",
       });
       await membership.save();
@@ -94,6 +95,21 @@ const getRoomByRoomId = async (roomId) => {
     throw error;
   }
 };
+const getRoomsByUserID = async (userId) => {
+  try {
+    const memberships = await Membership.find({ userId, status: "active" })
+      .populate("roomId", "roomId name avatar description expiresAt");
+    if (!memberships.length) return [];
+    return memberships.map((m) => ({
+      roomId: m.roomId,
+      role: m.role,
+      joinedAt: m.joinedAt,
+    }));
+  } catch (error) {
+    console.error("Lỗi trong service getRoomsByUserID:", error);
+    throw error;
+  }
+};
 module.exports = {
-  createRoom,getRoomByRoomId
+  createRoom, getRoomByRoomId, getRoomsByUserID
 };

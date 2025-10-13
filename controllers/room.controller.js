@@ -1,4 +1,4 @@
-const { createRoom, getRoomByRoomId } = require("../services/room.sevrice");
+const { createRoom, getRoomByRoomId, getRoomsByUserID} = require("../services/room.sevrice");
 
 exports.createRoomController = async (req, res) => {
     try {
@@ -35,3 +35,17 @@ exports.getRoomByRoomIdController = async (req, res) => {
         res.status(500).json({ message: "Lỗi máy chủ" });
     }
 };
+exports.findRoomController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const roomData = await getRoomsByUserID(userId);
+        res.status(200).json({
+            success: true,
+            message: "Lấy Data phòng thành công",
+            data: roomData,
+        })
+    } catch (error) {
+        console.error("Lỗi khi lấy thông tin phòng:", error);
+        res.status(500).json({ message: "Lỗi máy chủ" });
+    }
+}
