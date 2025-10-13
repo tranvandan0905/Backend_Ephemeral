@@ -10,5 +10,6 @@ router.get("/auth/google/callback", passport.authenticate("google", { session: f
 // Room
 router.post("/room", authenticateToken, createRoomController);
 router.get("/room/:roomId", getRoomByRoomIdController);
+
 module.exports = router;
 
