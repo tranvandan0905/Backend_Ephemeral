@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   avatarUrl: { type: String },
   passwordHash: { type: String }, 
   authProviders: [authProviderSchema],
-  roles: { type: [String], default: ["user"] },
+  roles: { type: String, default: "user" },
   lastSeen: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
 });

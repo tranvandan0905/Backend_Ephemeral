@@ -1,4 +1,4 @@
-const { createRoom, getRoomByRoomId, getRoomsByUserID} = require("../services/room.sevrice");
+const { createRoom, getRoomByRoomId, getRoomsByUserID} = require("../services/room.service");
 
 exports.createRoomController = async (req, res) => {
     try {

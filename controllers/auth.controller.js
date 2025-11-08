@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-
+const User = require('../models/user.model');
+const bcrypt = require("bcryptjs");
 const googleCallback = (req, res) => {
   try {
     const user = {
@@ -17,15 +18,15 @@ const googleCallback = (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, 
+      secure: false,
       sameSite: "lax",
     });
 
     return res.send(`
       <script>
         window.opener.postMessage(${JSON.stringify(
-          { success: true, user }
-        )}, window.location.origin);
+      { user }
+    )}, "*");
         window.close();
       </script>
     `);
@@ -34,5 +35,33 @@ const googleCallback = (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const loginController = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-module.exports = { googleCallback };
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: "Thiếu thông tin đăng nhập!" });
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ success: false, message: "Người dùng không tồn tại!" });
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch)
+      return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
+    const { passwordHash, ...userData } = user.toObject();
+
+    res.status(200).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: userData,
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+module.exports = { loginController };
+
+module.exports = { googleCallback, loginController };
