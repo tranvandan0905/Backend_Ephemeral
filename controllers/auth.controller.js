@@ -17,18 +17,16 @@ const googleCallback = (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, 
+      secure: false,
       sameSite: "lax",
     });
 
     return res.send(`
-      <script>
-        window.opener.postMessage(${JSON.stringify(
-          { success: true, user }
-        )}, window.location.origin);
-        window.close();
-      </script>
-    `);
+    <script>
+      window.opener.postMessage(${JSON.stringify({ user })}, "*");
+      window.close();
+    </script>
+  `);
   } catch (error) {
     console.error("Google login error:", error);
     res.status(500).json({ message: "Internal server error" });
