@@ -59,15 +59,12 @@ const loginController = async (req, res) => {
       secure: false,
       sameSite: "lax",
     });
+    res.status(201).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: user,
+    });
 
-    return res.send(`
-      <script>
-        window.opener.postMessage(${JSON.stringify(
-      { user }
-    )}, "*");
-        window.close();
-      </script>
-    `);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
