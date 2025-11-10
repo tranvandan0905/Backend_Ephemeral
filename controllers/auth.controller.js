@@ -49,19 +49,28 @@ const loginController = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch)
       return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
-    const { passwordHash, ...userData } = user.toObject();
-
-    res.status(200).json({
-      success: true,
-      message: "Đăng nhập thành công",
-      data: userData,
+    const token = jwt.sign(
+      { id: user._id, roles: user.roles },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
     });
 
+    return res.send(`
+      <script>
+        window.opener.postMessage(${JSON.stringify(
+      { user }
+    )}, "*");
+        window.close();
+      </script>
+    `);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
-module.exports = { loginController };
 
 module.exports = { googleCallback, loginController };
