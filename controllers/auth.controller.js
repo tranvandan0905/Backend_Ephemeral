@@ -11,7 +11,7 @@ const googleCallback = (req, res) => {
     };
 
     const token = jwt.sign(
-      { id: user._id, roles: user.roles },
+      { id: user._id, roles: user.roles, name: user.displayName, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -50,7 +50,7 @@ const loginController = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
     const token = jwt.sign(
-      { id: user._id, roles: user.roles },
+      { id: user._id, roles: user.roles, name: user.displayName, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -59,15 +59,12 @@ const loginController = async (req, res) => {
       secure: false,
       sameSite: "lax",
     });
+    res.status(201).json({
+      success: true,
+      message: "Đăng nhập thành công",
+      data: user,
+    });
 
-    return res.send(`
-      <script>
-        window.opener.postMessage(${JSON.stringify(
-      { user }
-    )}, "*");
-        window.close();
-      </script>
-    `);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
