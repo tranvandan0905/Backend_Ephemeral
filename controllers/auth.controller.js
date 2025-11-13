@@ -11,7 +11,7 @@ const googleCallback = (req, res) => {
     };
 
     const token = jwt.sign(
-      { id: user._id, roles: user.roles, name: user.displayName, email: user.email },
+      { id: user._id, roles: user.roles, displayName: user.displayName, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -50,7 +50,7 @@ const loginController = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
     const token = jwt.sign(
-      { id: user._id, roles: user.roles, name: user.displayName, email: user.email },
+      { id: user._id, roles: user.roles, displayName: user.displayName, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
