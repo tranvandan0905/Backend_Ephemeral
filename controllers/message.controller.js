@@ -20,8 +20,8 @@ const sendMessage = async (req, res) => {
 
 const getMessages = async (req, res) => {
     try {
-        const { conversationId } = req.params;
-        const messages = await handegetMessagesByConversation(conversationId);
+        const { roomId } = req.params;
+        const messages = await handegetMessagesByConversation(roomId);
         res.status(201).json({
             success: true,
             message: "Lấy message thành công",

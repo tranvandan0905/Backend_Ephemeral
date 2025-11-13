@@ -23,6 +23,6 @@ router.post("/login",loginController)
 router.get("/profile",authenticateToken,profileCOntroller)
 // Message
 router.post("/message",authenticateToken,upload.single("image"),sendMessage)
-router.get("/message",authenticateToken,getMessages)
+router.get("/message/:roomId",authenticateToken,getMessages)
 module.exports = router;
 
