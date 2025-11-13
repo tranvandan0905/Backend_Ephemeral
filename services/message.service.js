@@ -1,6 +1,7 @@
 const Message = require("../models/message.model");
 const { uploadToCloudinary } = require("./cloudinary.service");
 const { updateLastMessage } = require("./conversation.service");
+const { FindIDUser } = require("./user.service");
 
 const handecreateMessage = async (roomId, userId, text, image) => {
     const user = await FindIDUser(userId);

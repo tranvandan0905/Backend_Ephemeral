@@ -8,6 +8,7 @@ const { googleCallback, loginController } = require("../controllers/auth.control
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController,findRoomController } = require('../controllers/room.controller');
 const { createUserController, profileCOntroller } = require('../controllers/user.controller');
+const { sendMessage, getMessages } = require('../controllers/message.controller');
 const router = express.Router();
 // Google login
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -20,5 +21,8 @@ router.get("/room/:roomId", getRoomByRoomIdController);
 router.post("/register",createUserController);
 router.post("/login",loginController)
 router.get("/profile",authenticateToken,profileCOntroller)
+// Message
+router.post("/message",authenticateToken,upload.single("image"),sendMessage)
+router.get("/message",authenticateToken,getMessages)
 module.exports = router;
 
