@@ -4,6 +4,7 @@ const User = require("../models/user.model");
 const { nanoid } = require("nanoid");
 const QRCode = require("qrcode");
 const bcrypt = require("bcryptjs");
+const { uploadToCloudinary } = require("./cloudinary.service");
 
 const generateRoomQRCode = async (roomId) => {
   try {
@@ -17,9 +18,9 @@ const generateRoomQRCode = async (roomId) => {
   }
 };
 
-const createRoom = async (userId, roomData) => {
+const createRoom = async (userId, avatar, roomData) => {
   try {
-    const { name, description, avatar, isPrivate, expiresAt, password } = roomData;
+    const { name, description, isPrivate, expiresAt, password } = roomData;
 
     // Hash mật khẩu nếu là phòng riêng tư
     let passwordHash = null;
@@ -35,11 +36,16 @@ const createRoom = async (userId, roomData) => {
 
     // Validate expiresAt 
     const expireDate = expiresAt ? new Date(expiresAt) : null;
+    let avatarUrl = null;
+    if (avatar) {
+      const uploadResult = await uploadToCloudinary(avatar.buffer);
+      avatarUrl = uploadResult.secure_url;
+    }
     const room = new Room({
       roomId,
       name,
       description,
-      avatar: avatar || null,
+      avatar: avatarUrl || null,
       passwordHash,
       qrCode,
       usersCount: 1,
@@ -58,7 +64,7 @@ const createRoom = async (userId, roomData) => {
         userId,
         avatar: user.avatarUrl,
         nickname: user.displayName,
-        expiresAt:expireDate,
+        expiresAt: expireDate,
         role: "creator",
       });
       await membership.save();

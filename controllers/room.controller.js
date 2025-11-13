@@ -1,9 +1,11 @@
-const { createRoom, getRoomByRoomId, getRoomsByUserID} = require("../services/room.service");
+
+const { createRoom, getRoomByRoomId, getRoomsByUserID } = require("../services/room.service");
 
 exports.createRoomController = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const room = await createRoom(userId, req.body);
+        const userId = req.user._id;
+        const avatar = req.file;
+        const room = await createRoom(userId,avatar, req.body);
         res.status(201).json({
             success: true,
             message: "Tạo phòng thành công",
