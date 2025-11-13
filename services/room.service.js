@@ -5,6 +5,7 @@ const { nanoid } = require("nanoid");
 const QRCode = require("qrcode");
 const bcrypt = require("bcryptjs");
 const { uploadToCloudinary } = require("./cloudinary.service");
+const Conversation = require("../models/conversation.model");
 
 const generateRoomQRCode = async (roomId) => {
   try {
@@ -56,17 +57,23 @@ const createRoom = async (userId, avatar, roomData) => {
 
     await room.save();
 
-    // Tạo membership cho chủ phòng
+    // Tạo membership /conversation cho chủ phòng
     const user = await User.findById(userId);
     if (user) {
       const membership = new Membership({
         roomId: room._id,
         userId,
-        avatar: user.avatarUrl,
-        nickname: user.displayName,
+        avatarUrl: user.avatarUrl,
+        displayName: user.displayName,
         expiresAt: expireDate,
         role: "creator",
       });
+      const conversation = new Conversation({
+        roomId: room._id,
+        userId,
+        text: "Chưa có tin nhắn nào!"
+      })
+      await conversation.save();
       await membership.save();
     }
 
@@ -103,19 +110,41 @@ const getRoomByRoomId = async (roomId) => {
 };
 const getRoomsByUserID = async (userId) => {
   try {
+    // Lấy các membership active của user
     const memberships = await Membership.find({ userId, status: "active" })
-      .populate("roomId", "roomId name avatar description expiresAt");
+      .populate("roomId", "roomId name avatar");
+
     if (!memberships.length) return [];
-    return memberships.map((m) => ({
-      roomId: m.roomId,
-      role: m.role,
-      joinedAt: m.joinedAt,
-    }));
+
+    const roomsFlatten = await Promise.all(
+      memberships.map(async (membership) => {
+        const room = membership.roomId;
+
+        // Lấy conversation mới nhất trong room
+        const conversation = await Conversation.findOne({ roomId: room._id })
+          .sort({ lastUpdated: -1 }) // lấy tin nhắn mới nhất
+          .populate("userId", "displayName");
+
+        return {
+          roomId: room.roomId,
+          name: room.name,
+          avatar: room.avatar || null,
+          displayName: conversation?.userId?.displayName || null,
+          text: conversation?.text || "Chưa có tin nhắn nào!",
+          lastUpdated: conversation?.lastUpdated || null,
+        };
+      })
+    );
+
+    return roomsFlatten;
+
   } catch (error) {
     console.error("Lỗi trong service getRoomsByUserID:", error);
     throw error;
   }
 };
+
+
 module.exports = {
   createRoom, getRoomByRoomId, getRoomsByUserID
 };
