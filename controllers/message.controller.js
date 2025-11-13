@@ -22,11 +22,7 @@ const getMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
         const messages = await handegetMessagesByConversation(roomId);
-        res.status(201).json({
-            success: true,
-            message: "Lấy message thành công",
-            data: messages,
-        });
+        res.status(201).json( messages);
     } catch (err) {
         res.status(500).json({
             success: false,
