@@ -24,14 +24,16 @@ const handecreateMessage = async (roomId, userId, text, image) => {
 
     const [savedMessage, _] = await Promise.all([
         message.save(),
-        updateLastMessage(roomId,userId, text)
+        updateLastMessage(roomId, userId, text)
     ]);
 
     return savedMessage;
 };
 
 const handegetMessagesByConversation = async (roomId) => {
-    return await Message.find({ roomId }).sort({ createdAt: 1 });
+    return await Message.find({ roomId })
+        .sort({ createdAt: 1 })
+        .select("userId displayName type text imageUrl createdAt");;
 };
 module.exports = { handecreateMessage, handegetMessagesByConversation };
 

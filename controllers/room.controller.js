@@ -13,7 +13,7 @@ exports.createRoomController = async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({
-            success: false,
+            success: false, 
             message: err.message || "Lỗi server khi tạo phòng",
         });
     }
