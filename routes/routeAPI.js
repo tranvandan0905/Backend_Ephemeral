@@ -1,5 +1,9 @@
 const express = require('express');
 const passport = require("../config/passport");
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 const { googleCallback, loginController } = require("../controllers/auth.controller");
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController,findRoomController } = require('../controllers/room.controller');
@@ -9,7 +13,7 @@ const router = express.Router();
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get("/auth/google/callback", passport.authenticate("google", { session: false }), googleCallback);
 // Room
-router.post("/room", authenticateToken, createRoomController);
+router.post("/room", authenticateToken,upload.single("avatar"), createRoomController);
 router.get("/room", authenticateToken, findRoomController);
 router.get("/room/:roomId", getRoomByRoomIdController);
 // User
