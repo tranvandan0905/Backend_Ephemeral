@@ -36,7 +36,7 @@ const handegetMessagesByConversation = async (roomId) => {
     const room_ID = await findRoomID(roomId);
     return await Message.find({ roomId: room_ID })
         .sort({ createdAt: 1 })
-        .select("userId displayName type text imageUrl createdAt");;
+        .select("userId displayName avatarUrl type text imageUrl createdAt");;
 };
 module.exports = { handecreateMessage, handegetMessagesByConversation };
 
