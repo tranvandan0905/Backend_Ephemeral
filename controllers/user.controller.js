@@ -1,4 +1,4 @@
-const { createUser } = require("../services/user.service");
+const { createUser, updateavatar } = require("../services/user.service");
 
 exports.createUserController = async (req, res) => {
     try {
@@ -11,8 +11,8 @@ exports.createUserController = async (req, res) => {
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
         if (!passwordRegex.test(password))
             throw new Error("Mật khẩu phải có ít nhất 6 ký tự, bao gồm cả chữ và số");
-        
-        
+
+
         const user = await createUser(displayName, email, password);
         res.status(201).json({
             success: true,
@@ -26,9 +26,35 @@ exports.createUserController = async (req, res) => {
         });
     }
 };
-exports.profileCOntroller=async(req,res)=>{
-    const profile=req.user;
+exports.profileCOntroller = async (req, res) => {
+    const profile = req.user;
     res.status(200).json({
-        data:profile
+        data: profile
     })
 }
+exports.updateavatarController = async (req, res) => {
+    try {
+        const avatar = req.file;
+        const userId = req.user._id;
+        if (!avatar) {
+            return res.status(400).json({
+                success: false,
+                message: "Vui lòng chọn ảnh avatar!",
+            });
+        }
+        const avatarUrl = await updateavatar(userId,avatar);
+
+        return res.status(200).json({
+            success: true,
+            message: "Cập nhật avatar thành công!",
+            data: avatarUrl,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Có lỗi xảy ra khi cập nhật avatar!",
+            error: error.message,
+        });
+    }
+};
