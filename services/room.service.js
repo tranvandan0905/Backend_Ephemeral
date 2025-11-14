@@ -18,7 +18,10 @@ const generateRoomQRCode = async (roomId) => {
     return null;
   }
 };
-
+const findRoomID = async (roomId) => {
+   const result = await Room.findOne({roomId});
+   return result._id;
+};
 const createRoom = async (userId, avatar, roomData) => {
   try {
     const { name, description, isPrivate, expiresAt, password } = roomData;
@@ -146,5 +149,5 @@ const getRoomsByUserID = async (userId) => {
 
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID
+  createRoom, getRoomByRoomId, getRoomsByUserID,findRoomID
 };
