@@ -66,8 +66,6 @@ const createRoom = async (userId, avatar, roomData) => {
       const membership = new Membership({
         roomId: room._id,
         userId,
-        avatarUrl: user.avatarUrl,
-        displayName: user.displayName,
         expiresAt: expireDate,
         role: "creator",
       });

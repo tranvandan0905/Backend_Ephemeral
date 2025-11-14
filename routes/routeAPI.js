@@ -9,6 +9,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController,findRoomController } = require('../controllers/room.controller');
 const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
+const { FindMembershipRoomIDController } = require('../controllers/membership.controller');
 const router = express.Router();
 // Google login
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -25,5 +26,7 @@ router.patch("/avatar",authenticateToken,upload.single("avatarUrl"),updateavatar
 // Message
 router.post("/message",authenticateToken,upload.single("image"),sendMessage)
 router.get("/message/:roomId",authenticateToken,getMessages)
+// Membership
+router.get("/membership/:roomId",authenticateToken,FindMembershipRoomIDController)
 module.exports = router;
 
