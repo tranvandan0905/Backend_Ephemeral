@@ -1,10 +1,10 @@
 
 const Conversation = require("../models/conversation.model");
 
-const updateLastMessage = async (room_ID, userId, text) => {
+const updateLastMessage = async (roomId, userId, text) => {
 
     const data = await Conversation.findOneAndUpdate(
-        { roomId: room_ID, userId },
+        { roomId, userId },
         { text: text },
         { new: true }
     );
