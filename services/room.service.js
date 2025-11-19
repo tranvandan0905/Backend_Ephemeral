@@ -4,7 +4,7 @@ const User = require("../models/user.model");
 const { nanoid } = require("nanoid");
 const QRCode = require("qrcode");
 const bcrypt = require("bcryptjs");
-const { uploadToCloudinary } = require("./cloudinary.service");
+const { uploadToCloudinary, deleteFromCloudinary } = require("./cloudinary.service");
 const Conversation = require("../models/conversation.model");
 
 const generateRoomQRCode = async (roomId) => {
@@ -19,16 +19,17 @@ const generateRoomQRCode = async (roomId) => {
   }
 };
 const findRoomID = async (roomId) => {
-   const result = await Room.findOne({roomId});
-   return result._id;
+  const result = await Room.findOne({ roomId });
+  return result;
 };
 const createRoom = async (userId, avatar, roomData) => {
   try {
-    const { name, description, isPrivate, expiresAt, password } = roomData;
-
+    const { name, description, expiresAt, password } = roomData;
+    let isPrivate = false;
     // Hash mật khẩu nếu là phòng riêng tư
     let passwordHash = null;
-    if (isPrivate && password) {
+    if (password) {
+      isPrivate = true
       passwordHash = await bcrypt.hash(password, 10);
     }
 
@@ -53,7 +54,7 @@ const createRoom = async (userId, avatar, roomData) => {
       passwordHash,
       qrCode,
       usersCount: 1,
-      isPrivate: isPrivate || false,
+      isPrivate: isPrivate,
       expiresAt: expireDate,
       createdBy: userId,
     });
@@ -145,7 +146,59 @@ const getRoomsByUserID = async (userId) => {
   }
 };
 
+const UpdateRoom = async (userId, roomId, avatar, roomData) => {
+
+  const { name, description, expiresAt, password, usersCount } = roomData;
+
+  const room = await findRoomID(roomId);
+  if (!room) throw new Error("Room không tồn tại");
+  if (room.createdBy != userId) {
+    throw new Error("Bạn không phải quản trị room");
+  }
+  // Xử lý password
+  let passwordHash = room.passwordHash;
+  let isPrivate = room.isPrivate;
+  if (password) {
+    passwordHash = await bcrypt.hash(password, 10);
+    isPrivate = true;
+  }
+
+  // Xử lý avatar upload & delete
+  let avatarUrl = room.avatar;
+  if (avatar) {
+    const uploadResult = await uploadToCloudinary(avatar.buffer);
+    avatarUrl = uploadResult.secure_url;
+
+    // Xóa avatar cũ nếu tồn tại
+    if (room.avatar) {
+      await deleteFromCloudinary(room.avatar);
+    }
+  }
+
+  // Xử lý expiresAt
+  let expireDate = room.expiresAt;
+  if (expiresAt) {
+    const d = new Date(expiresAt);
+    if (!isNaN(d.getTime())) expireDate = d;
+  }
+
+  const roomUpdateData = {
+    name: name || room.name,
+    description: description || room.description,
+    avatar: avatarUrl,
+    passwordHash,
+    qrCode: room.qrCode,
+    usersCount: usersCount ?? room.usersCount,
+    isPrivate,
+    expiresAt: expireDate,
+    createdBy: userId,
+  };
+
+  await Room.updateOne({ _id: room._id }, { $set: roomUpdateData });
+
+
+};
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID,findRoomID
+  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom
 };
