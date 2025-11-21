@@ -1,28 +1,51 @@
 require('dotenv').config();
-const express = require('express'); 
-const connection = require('./config/database');
+const express = require('express');
+const connection = require('./config/database'); // file config DB MongoDB
 const routeAPI = require('./routes/routeAPI');
 const cookieParser = require("cookie-parser");
-const app = express(); 
 const cors = require('cors');
-app.use(express.json()); 
+const http = require("http");
+const socketIo = require("socket.io");
+
+const app = express();
+
+// Middleware
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser()); 
+app.use(cookieParser());
 app.use(cors({
-  origin: ['http://localhost:5173'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  
+  origin: ['http://localhost:5173'], // frontend
+  methods: ['GET','POST','PATCH','PUT','DELETE'],
+  credentials: true, // quan trọng để gửi cookie
 }));
+
+// API routes
 app.use('/api', routeAPI);
+
+// Tạo HTTP server & Socket.IO
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: {
+    origin: ['http://localhost:5173'],
+    methods: ['GET','POST','PATCH','PUT','DELETE'],
+    credentials: true
+  }
+});
+
+// Socket.IO
+require("./sockets/socket")(io);
+
+// Kết nối DB
 (async () => {
   try {
     await connection();
     console.log("Đã kết nối DB thành công!");
   } catch (error) {
-    console.error(" Lỗi kết nối DB:", error);
+    console.error("Lỗi kết nối DB:", error);
   }
 })();
 
-app.listen(process.env.PORT, () => {
-  console.log(` Server đang chạy tại cổng ${process.env.PORT}`);
+// Server listen
+server.listen(process.env.PORT, () => {
+  console.log(`Server đang chạy tại cổng ${process.env.PORT}`);
 });

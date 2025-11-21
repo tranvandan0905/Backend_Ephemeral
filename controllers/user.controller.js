@@ -28,9 +28,9 @@ exports.createUserController = async (req, res) => {
 };
 exports.profileCOntroller = async (req, res) => {
     const profile = req.user;
-    res.status(200).json({
-        data: profile
-    })
+    res.status(200).json(
+         profile
+    )
 }
 exports.updateavatarController = async (req, res) => {
     try {
