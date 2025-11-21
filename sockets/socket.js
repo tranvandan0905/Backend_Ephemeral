@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-
+const { handecreateMessage } = require("../services/message.service");
 module.exports = (io) => {
   const onlineUsers = {};
 
@@ -24,7 +24,7 @@ module.exports = (io) => {
   });
 
   io.on("connection", (socket) => {
-    const userId = socket.user._id ;
+    const userId = socket.user._id;
     onlineUsers[userId] = socket.id;
     console.log(`${userId} đã kết nối`);
 
@@ -34,16 +34,6 @@ module.exports = (io) => {
       console.log(`${userId} đã join room ${roomId}`);
     });
 
-    // Send message
-    socket.on("sendMessage", ({ roomId, text }) => {
-      const newMsg = {
-        userId,
-        text,
-        roomId,
-        createdAt: Date.now(),
-      };
-      io.to(roomId).emit("receiveMessage", newMsg);
-    });
 
     socket.on("disconnect", () => {
       console.log(`${userId} đã ngắt`);

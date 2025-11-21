@@ -5,6 +5,7 @@ const routeAPI = require('./routes/routeAPI');
 const cookieParser = require("cookie-parser");
 const cors = require('cors');
 const http = require("http");
+const socketHandler = require("./sockets/socket")
 const socketIo = require("socket.io");
 
 const app = express();
@@ -32,8 +33,12 @@ const io = socketIo(server, {
   }
 });
 
-// Socket.IO
-require("./sockets/socket")(io);
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+socketHandler(io);
 
 // Kết nối DB
 (async () => {
