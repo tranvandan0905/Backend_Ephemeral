@@ -35,15 +35,13 @@ const handecreateMessage = async (roomId, userId, text, image) => {
 
     return savedMessage;
 };
-const handegetMessagesByConversation = async (roomId, limit, before) => {
+const handegetMessagesByConversation = async (roomId) => {
     const room_ID = await findRoomID(roomId);
     
     return await Message.find({
         roomId: room_ID._id,
-        createdAt: { $lt: before }
     })
     .sort({ createdAt: -1 }) 
-    .limit(limit)
     .select("userId displayName avatarUrl type text imageUrl createdAt");
 };
 

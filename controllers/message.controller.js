@@ -22,9 +22,7 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
-        const limit = parseInt(req.query.limit) || 20;
-        const before = parseInt(req.query.before) || Date.now();
-        const messages = await handegetMessagesByConversation(roomId,limit,before);
+        const messages = await handegetMessagesByConversation(roomId);
         res.status(201).json(messages);
     } catch (err) {
         res.status(500).json({
