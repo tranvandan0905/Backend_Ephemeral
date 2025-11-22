@@ -29,7 +29,7 @@ const createMembership = async (userId, roomId, password) => {
     const user = await FindIDUser(userId);
 
     if (room.isPrivate) {
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        const isMatch = await bcrypt.compare(password, room.passwordHash);
         if (!isMatch) {
             throw new Error("Sai mật khẩu!")
         }
