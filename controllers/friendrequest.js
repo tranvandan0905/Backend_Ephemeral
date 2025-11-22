@@ -13,7 +13,7 @@ exports.createfriendrequestController = async (req, res) => {
         )
 
     } catch (err) {
-        res.status(500).json({
+        res.status(500).json({ 
             success: false,
             message: err.message || "Lỗi server khi  thêm bạn bè",
         });
