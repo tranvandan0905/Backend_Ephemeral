@@ -6,12 +6,12 @@ const upload = multer({ storage });
 
 const { googleCallback, loginController } = require("../controllers/auth.controller");
 const { authenticateToken } = require('../middleware/authMiddleware');
-const { createRoomController, getRoomByRoomIdController, findRoomController, UpdateRoomController } = require('../controllers/room.controller');
+const { createRoomController, getRoomByRoomIdController, findRoomController, UpdateRoomController, UpdateRoompasswordController } = require('../controllers/room.controller');
 const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const { createfriendrequestController } = require('../controllers/friendrequest');
-const { UpdateRoompassword } = require('../services/room.service');
+
 const router = express.Router();
 // Google login
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -21,7 +21,7 @@ router.post("/room", authenticateToken, upload.single("avatar"), createRoomContr
 router.get("/room", authenticateToken, findRoomController);
 router.get("/room/:roomId", getRoomByRoomIdController);
 router.patch("/room/:roomId", authenticateToken, upload.single("avatar"), UpdateRoomController);
-router.patch("/roompassword/:roomId", authenticateToken, UpdateRoompassword);
+router.patch("/roompassword/:roomId", authenticateToken, UpdateRoompasswordController);
 // User
 router.post("/register", createUserController);
 router.post("/login", loginController)
