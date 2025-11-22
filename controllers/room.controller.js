@@ -43,11 +43,7 @@ exports.findRoomController = async (req, res) => {
     try {
         const userId = req.user._id;
         const roomData = await getRoomsByUserID(userId);
-        res.status(200).json({
-            success: true,
-            message: "Lấy Data phòng thành công",
-            data: roomData,
-        })
+        res.status(200).json( roomData)
     } catch (err) {
         res.status(500).json({
             success: false,

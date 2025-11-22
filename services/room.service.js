@@ -146,13 +146,13 @@ const getRoomsByUserID = async (userId) => {
   }
 };
 
-const UpdateRoom = async (userId, roomId, avatar, roomData) => {
+const UpdateRoom = async (userId, roomId, avatar, roomData= {}) => {
 
   const { name, description, expiresAt, password, usersCount } = roomData;
 
   const room = await findRoomID(roomId);
   if (!room) throw new Error("Room không tồn tại");
-  if (room.createdBy != userId) {
+  if (room.createdBy != userId && !usersCount ) {
     throw new Error("Bạn không phải quản trị room");
   }
   // Xử lý password
@@ -181,14 +181,17 @@ const UpdateRoom = async (userId, roomId, avatar, roomData) => {
     const d = new Date(expiresAt);
     if (!isNaN(d.getTime())) expireDate = d;
   }
-
+  let Count = room.usersCount;
+  if (usersCount !== undefined && usersCount !== null) {
+    Count = room.usersCount + usersCount;
+  }
   const roomUpdateData = {
     name: name || room.name,
     description: description || room.description,
     avatar: avatarUrl,
     passwordHash,
     qrCode: room.qrCode,
-    usersCount: usersCount ?? room.usersCount,
+    usersCount: Count ?? room.usersCount,
     isPrivate,
     expiresAt: expireDate,
     createdBy: userId,

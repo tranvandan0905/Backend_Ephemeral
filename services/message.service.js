@@ -9,9 +9,8 @@ const handecreateMessage = async (roomId, userId, text, image) => {
     const user = await FindIDUser(userId);
     const room_ID = await findRoomID(roomId);
     const checkuser = await findMembershipUserID(userId);
-    if(!checkuser)
-    {
-         throw new Error("Bạn phải tham gia!");
+    if (!checkuser) {
+        throw new Error("Bạn phải tham gia!");
     }
     if (!text && !image) {
         throw new Error("Phải có dữ liệu!");
@@ -29,7 +28,6 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
-
     const [savedMessage, _] = await Promise.all([
         message.save(),
         updateLastMessage(room_ID._id, userId, text)
@@ -37,12 +35,15 @@ const handecreateMessage = async (roomId, userId, text, image) => {
 
     return savedMessage;
 };
-
 const handegetMessagesByConversation = async (roomId) => {
     const room_ID = await findRoomID(roomId);
-    return await Message.find({ roomId: room_ID._id })
-        .sort({ createdAt: 1 })
-        .select("userId displayName avatarUrl type text imageUrl createdAt");;
+    
+    return await Message.find({
+        roomId: room_ID._id,
+    })
+    .sort({ createdAt: -1 }) 
+    .select("userId displayName avatarUrl type text imageUrl createdAt");
 };
+
 module.exports = { handecreateMessage, handegetMessagesByConversation };
 

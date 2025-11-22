@@ -1,5 +1,5 @@
 const Membership = require("../models/membership.model");
-const { findRoomID } = require("./room.service");
+const { findRoomID, UpdateRoom } = require("./room.service");
 const { FindIDUser } = require("./user.service");
 const bcrypt = require("bcryptjs");
 const FindMembershipRoomID = async (roomId) => {
@@ -42,6 +42,7 @@ const createMembership = async (userId, roomId, password) => {
         expiresAt: room.expiresAt,
         role: "member",
     });
+    await UpdateRoom(userId,roomId,null, { usersCount: 1 });
     await membership.save();
     return membership;
 

@@ -4,7 +4,8 @@ const sendMessage = async (req, res) => {
         const userId = req.user._id;
         const image = req.file;
         const { roomId, text } = req.body;
-        const message = await handecreateMessage(roomId,userId,text,image);
+        const message = await handecreateMessage(roomId, userId, text, image);
+        req.io.to(roomId).emit("receiveMessage", message);
         res.status(201).json({
             success: true,
             message: "Tạo message thành công",
@@ -22,7 +23,7 @@ const getMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
         const messages = await handegetMessagesByConversation(roomId);
-        res.status(201).json( messages);
+        res.status(201).json(messages);
     } catch (err) {
         res.status(500).json({
             success: false,
