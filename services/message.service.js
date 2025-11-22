@@ -8,7 +8,7 @@ const { FindIDUser } = require("./user.service");
 const handecreateMessage = async (roomId, userId, text, image) => {
     const user = await FindIDUser(userId);
     const room_ID = await findRoomID(roomId);
-    const checkuser = await findMembershipUserID(userId);
+    const checkuser = await findMembershipUserID(userId,room_ID._id);
     if (!checkuser) {
         throw new Error("Bạn phải tham gia!");
     }

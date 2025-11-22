@@ -9,7 +9,7 @@ const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController, findRoomController, UpdateRoomController } = require('../controllers/room.controller');
 const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
-const { FindMembershipRoomIDController, createMembershipController } = require('../controllers/membership.controller');
+const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const router = express.Router();
 // Google login
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -31,5 +31,6 @@ router.get("/message/:roomId", authenticateToken, getMessages)
 // Membership
 router.get("/membership/:roomId", authenticateToken, FindMembershipRoomIDController)
 router.post("/membership", authenticateToken, createMembershipController)
+router.get("/checkmembership/:roomId",authenticateToken,findMembershipUserIDController)
 module.exports = router;
 

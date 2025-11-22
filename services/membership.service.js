@@ -19,17 +19,15 @@ const FindMembershipRoomID = async (roomId) => {
         joinedAt: m.joinedAt
     }));
 };
-const findMembershipUserID = async (userId) => {
-    const result = await Membership.findOne({ userId });
+const findMembershipUserID = async (userId, roomId) => {
+
+    const result = await Membership.findOne({ userId, roomId });
     return result;
 };
 const createMembership = async (userId, roomId, password) => {
     const room = await findRoomID(roomId);
     const user = await FindIDUser(userId);
-    const checkmembership = await findMembershipUserID(userId)
-    if (checkmembership) {
-        throw new Error("Bạn đã tham gia phòng!")
-    }
+
     if (room.isPrivate) {
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) {
@@ -42,7 +40,7 @@ const createMembership = async (userId, roomId, password) => {
         expiresAt: room.expiresAt,
         role: "member",
     });
-    await UpdateRoom(userId,roomId,null, { usersCount: 1 });
+    await UpdateRoom(userId, roomId, null, { usersCount: 1 });
     await membership.save();
     return membership;
 

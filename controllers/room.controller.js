@@ -27,11 +27,7 @@ exports.getRoomByRoomIdController = async (req, res) => {
             return res.status(404).json({ message: "Phòng không tồn tại" });
         }
 
-        res.status(200).json({
-            success: true,
-            data: roomData,
-            message: "Tìm phòng thành công",
-        });
+        res.status(200).json(roomData);
     } catch (error) {
         res.status(500).json({
             success: false,

@@ -1,11 +1,11 @@
-require('dotenv').config();
-const express = require('express');
-const connection = require('./config/database'); // file config DB MongoDB
-const routeAPI = require('./routes/routeAPI');
+require("dotenv").config();
+const express = require("express");
+const connection = require("./config/database");
+const routeAPI = require("./routes/routeAPI");
 const cookieParser = require("cookie-parser");
-const cors = require('cors');
+const cors = require("cors");
 const http = require("http");
-const socketHandler = require("./sockets/socket")
+const socketHandler = require("./sockets/socket");
 const socketIo = require("socket.io");
 
 const app = express();
@@ -14,33 +14,33 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({
-  origin: ['http://localhost:5173'], // frontend
-  methods: ['GET','POST','PATCH','PUT','DELETE'],
-  credentials: true, // quan trọng để gửi cookie
-}));
-
-// API routes
-app.use('/api', routeAPI);
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 // Tạo HTTP server & Socket.IO
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ['http://localhost:5173'],
-    methods: ['GET','POST','PATCH','PUT','DELETE'],
-    credentials: true
-  }
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    credentials: true,
+  },
 });
-
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
+app.use("/api", routeAPI);
 
+// Socket
 socketHandler(io);
 
-// Kết nối DB
+// Database
 (async () => {
   try {
     await connection();
@@ -50,7 +50,7 @@ socketHandler(io);
   }
 })();
 
-// Server listen
+// Server
 server.listen(process.env.PORT, () => {
   console.log(`Server đang chạy tại cổng ${process.env.PORT}`);
 });
