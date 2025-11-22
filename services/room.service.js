@@ -102,6 +102,7 @@ const getRoomByRoomId = async (roomId) => {
       createdBy: room.createdBy,
       usersCount: room.usersCount,
       createdAt: room.createdAt,
+      password: room.passwordHash
     };
 
     return roomData;
@@ -148,7 +149,7 @@ const getRoomsByUserID = async (userId) => {
 
 const UpdateRoom = async (userId, roomId, avatar, roomData = {}) => {
 
-  const { name, description, expiresAt, password, usersCount } = roomData;
+  const { name, description, expiresAt, usersCount } = roomData;
 
   const room = await findRoomID(roomId);
   if (!room) throw new Error("Room không tồn tại");
@@ -184,7 +185,7 @@ const UpdateRoom = async (userId, roomId, avatar, roomData = {}) => {
     passwordHash: room.passwordHash,
     qrCode: room.qrCode,
     usersCount: Count ?? room.usersCount,
-    isPrivate:room.isPrivate,
+    isPrivate: room.isPrivate,
     expiresAt: expireDate,
     createdBy: userId,
   };
@@ -204,6 +205,7 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
   }
 
   let isPrivate = false;
+  let passwordHash=null;
   if (password) {
     passwordHash = await bcrypt.hash(password, 10);
     isPrivate = true;
@@ -219,5 +221,5 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
 };
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom,UpdateRoompassword
+  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom, UpdateRoompassword
 };
