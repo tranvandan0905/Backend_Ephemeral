@@ -146,23 +146,15 @@ const getRoomsByUserID = async (userId) => {
   }
 };
 
-const UpdateRoom = async (userId, roomId, avatar, roomData= {}) => {
+const UpdateRoom = async (userId, roomId, avatar, roomData = {}) => {
 
   const { name, description, expiresAt, password, usersCount } = roomData;
 
   const room = await findRoomID(roomId);
   if (!room) throw new Error("Room không tồn tại");
-  if (room.createdBy != userId && !usersCount ) {
+  if (room.createdBy != userId && !usersCount) {
     throw new Error("Bạn không phải quản trị room");
   }
-  // Xử lý password
-  let passwordHash = room.passwordHash;
-  let isPrivate = room.isPrivate;
-  if (password) {
-    passwordHash = await bcrypt.hash(password, 10);
-    isPrivate = true;
-  }
-
   // Xử lý avatar upload & delete
   let avatarUrl = room.avatar;
   if (avatar) {
@@ -189,10 +181,10 @@ const UpdateRoom = async (userId, roomId, avatar, roomData= {}) => {
     name: name || room.name,
     description: description || room.description,
     avatar: avatarUrl,
-    passwordHash,
+    passwordHash: room.passwordHash,
     qrCode: room.qrCode,
     usersCount: Count ?? room.usersCount,
-    isPrivate,
+    isPrivate:room.isPrivate,
     expiresAt: expireDate,
     createdBy: userId,
   };
@@ -201,7 +193,31 @@ const UpdateRoom = async (userId, roomId, avatar, roomData= {}) => {
 
 
 };
+const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
+
+  const { password } = roomData;
+
+  const room = await findRoomID(roomId);
+  if (!room) throw new Error("Room không tồn tại");
+  if (room.createdBy != userId) {
+    throw new Error("Bạn không phải quản trị room");
+  }
+
+  let isPrivate = false;
+  if (password) {
+    passwordHash = await bcrypt.hash(password, 10);
+    isPrivate = true;
+  }
+  const roomUpdateData = {
+    passwordHash,
+    isPrivate,
+  };
+
+  await Room.updateOne({ _id: room._id }, { $set: roomUpdateData });
+
+
+};
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom
+  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom,UpdateRoompassword
 };

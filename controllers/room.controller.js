@@ -1,5 +1,5 @@
 
-const { createRoom, getRoomByRoomId, getRoomsByUserID, UpdateRoom } = require("../services/room.service");
+const { createRoom, getRoomByRoomId, getRoomsByUserID, UpdateRoom, UpdateRoompassword } = require("../services/room.service");
 
 exports.createRoomController = async (req, res) => {
     try {
@@ -62,6 +62,24 @@ exports.UpdateRoomController = async (req, res) => {
         res.status(500).json({
             success: false,
             message: err.message || "Lỗi server khi tạo phòng",
+        });
+    }
+
+}
+exports.UpdateRoompasswordController = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { roomId } = req.params;
+        const room = await UpdateRoompassword(userId, roomId, req.body);
+        res.status(200).json({
+            success: true,
+            message: "Cập nhật mật khẩu phòng thành công",
+            data: room,
+        })
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message || "Lỗi server khi đổi mật khẩu phòng",
         });
     }
 

@@ -10,6 +10,8 @@ const { createRoomController, getRoomByRoomIdController, findRoomController, Upd
 const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
+const { createfriendrequestController } = require('../controllers/friendrequest');
+const { UpdateRoompassword } = require('../services/room.service');
 const router = express.Router();
 // Google login
 router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -19,7 +21,7 @@ router.post("/room", authenticateToken, upload.single("avatar"), createRoomContr
 router.get("/room", authenticateToken, findRoomController);
 router.get("/room/:roomId", getRoomByRoomIdController);
 router.patch("/room/:roomId", authenticateToken, upload.single("avatar"), UpdateRoomController);
-
+router.patch("/roompassword/:roomId", authenticateToken, UpdateRoompassword);
 // User
 router.post("/register", createUserController);
 router.post("/login", loginController)
@@ -32,5 +34,8 @@ router.get("/message/:roomId", authenticateToken, getMessages)
 router.get("/membership/:roomId", authenticateToken, FindMembershipRoomIDController)
 router.post("/membership", authenticateToken, createMembershipController)
 router.get("/checkmembership/:roomId",authenticateToken,findMembershipUserIDController)
+//friend
+router.post("/friendrequest",authenticateToken,createfriendrequestController)
+
 module.exports = router;
 
