@@ -10,7 +10,8 @@ const { createRoomController, getRoomByRoomIdController, findRoomController, Upd
 const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
-const { createfriendrequestController } = require('../controllers/friendrequest');
+const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
+const { deleteFriendcontroller, getFriendcontroller } = require('../controllers/friends.controller');
 
 const router = express.Router();
 // Google login
@@ -36,6 +37,13 @@ router.post("/membership", authenticateToken, createMembershipController)
 router.get("/checkmembership/:roomId",authenticateToken,findMembershipUserIDController)
 //friend
 router.post("/friendrequest",authenticateToken,createfriendrequestController)
+router.patch("/friendrequest/:friendrequestId",authenticateToken,updatefriendrequestController)
 
+router.delete("/friend/:friendId",authenticateToken,deleteFriendcontroller)
+router.get("/friend", authenticateToken, getFriendcontroller)
+
+
+router.get("/sentfriend", authenticateToken, getSentFriendRequestscontroller)
+router.get("/receivedfriend", authenticateToken, getReceivedFriendRequestscontroller)
 module.exports = router;
 
