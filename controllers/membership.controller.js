@@ -4,16 +4,17 @@ const { findRoomID } = require("../services/room.service");
 exports.FindMembershipRoomIDController = async (req, res) => {
     try {
         const { roomId } = req.params;
+          const userId = req.user._id;
         if (!roomId) {
             throw new Error("Thiếu dữ liệu!")
         }
-        const membership = await FindMembershipRoomID(roomId);
+        const membership = await FindMembershipRoomID(roomId,userId);
         res.status(200).json(membership)
 
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: err.message || "Lỗi server khi tạo user",
+            message: error.message || "Lỗi server khi tạo user",
         });
     }
 

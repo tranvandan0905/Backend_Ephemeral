@@ -1,24 +1,86 @@
 const Membership = require("../models/membership.model");
+const FriendRequest = require("../models/friendrequest.model");
+const Friend = require("../models/friends.model");
 const { findRoomID, UpdateRoom } = require("./room.service");
 const { FindIDUser } = require("./user.service");
 const bcrypt = require("bcryptjs");
-const FindMembershipRoomID = async (roomId) => {
-    const roomID = await findRoomID(roomId);
-    const result = await Membership.find({ roomId: roomID })
-        .populate("userId", "displayName avatarUrl")
-        .lean();
+const FindMembershipRoomID = async (roomId, userId) => {
+  const room = await findRoomID(roomId);
 
-    return result.map(m => ({
-        userId: m.userId._id,
-        displayName: m.userId.displayName,
-        avatarUrl: m.userId.avatarUrl,
-        roomId: m.roomId,
-        role: m.role,
-        expiresAt: m.expiresAt,
-        status: m.status,
-        joinedAt: m.joinedAt
-    }));
+  const members = await Membership.find({ roomId: room._id })
+    .populate("userId", "displayName avatarUrl")
+    .lean();
+
+  // Danh sách userId trong room 
+  const memberUserIds = members
+    .map(m => m.userId?._id?.toString())
+    .filter(id => id && id !== userId.toString());
+
+  // Lấy danh sách bạn bè
+  const friends = await Friend.find({
+    $or: [
+      { userId1: userId, userId2: { $in: memberUserIds } },
+      { userId2: userId, userId1: { $in: memberUserIds } }
+    ]
+  }).lean();
+
+  const friendSet = new Set(
+    friends.map(f =>
+      f.userId1.toString() === userId.toString()
+        ? f.userId2.toString()
+        : f.userId1.toString()
+    )
+  );
+
+  // Lấy friend request
+  const requests = await FriendRequest.find({
+    $or: [
+      { senderId: userId, receiverId: { $in: memberUserIds } },
+      { receiverId: userId, senderId: { $in: memberUserIds } }
+    ]
+  }).lean();
+
+  const sentSet = new Set(
+    requests
+      .filter(r => r.senderId.toString() === userId.toString())
+      .map(r => r.receiverId.toString())
+  );
+
+  const receivedSet = new Set(
+    requests
+      .filter(r => r.receiverId.toString() === userId.toString())
+      .map(r => r.senderId.toString())
+  );
+
+  // Build response
+  return members.map(m => {
+    const targetId = m.userId._id.toString();
+    let checkfriend = "NONE";
+
+    if (targetId === userId.toString()) {
+      checkfriend = "SELF";
+    } else if (friendSet.has(targetId)) {
+      checkfriend = "FRIEND";
+    } else if (sentSet.has(targetId)) {
+      checkfriend = "SENT";
+    } else if (receivedSet.has(targetId)) {
+      checkfriend = "RECEIVED";
+    }
+
+    return {
+      userId: m.userId._id,
+      displayName: m.userId.displayName,
+      avatarUrl: m.userId.avatarUrl,
+      roomId: m.roomId,
+      role: m.role,
+      expiresAt: m.expiresAt,
+      status: m.status,
+      joinedAt: m.joinedAt,
+      checkfriend
+    };
+  });
 };
+
 const findMembershipUserID = async (userId, roomId) => {
 
     const result = await Membership.findOne({ userId, roomId });

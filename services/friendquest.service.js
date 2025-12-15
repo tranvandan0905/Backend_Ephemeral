@@ -1,4 +1,4 @@
-const FriendRequest = require("../models/friendrequest.model");  
+const FriendRequest = require("../models/friendrequest.model");
 const { createFriend } = require("./friends.service");
 const { FindIDUser } = require("./user.service");
 const Friend = require("../models/friends.model");
@@ -65,8 +65,49 @@ const updateFriendRequest = async (userId, friendrequestId, data) => {
 const getSentFriendRequests = async (userId) => {
     return await FriendRequest.find({ senderId: userId }).populate("receiverId", "displayName avatarUrl");
 };
+const FRIEND_STATUS = {
+    FRIEND: "FRIEND",
+    SENT: "SENT",
+    RECEIVED: "RECEIVED",
+    NONE: "NONE",
+};
+
+const checkFriend = async (userId, targetUserId) => {
+    // Đã là bạn bè
+    const isFriend = await Friend.exists({
+        $or: [
+            { userId1: userId, userId2: targetUserId },
+            { userId1: targetUserId, userId2: userId }
+        ]
+    });
+
+    if (isFriend) {
+        return { status: FRIEND_STATUS.FRIEND };
+    }
+
+    //Kiểm tra lời mời kết bạn 
+    const request = await FriendRequest.findOne({
+        $or: [
+            { senderId: userId, receiverId: targetUserId },
+            { senderId: targetUserId, receiverId: userId }
+        ]
+    });
+
+    if (!request) {
+        return { status: FRIEND_STATUS.NONE };
+    }
+
+    //Phân biệt gửi / nhận
+    return {
+        status:
+            request.senderId.toString() === userId.toString()
+                ? FRIEND_STATUS.SENT
+                : FRIEND_STATUS.RECEIVED
+    };
+};
+
 
 const getReceivedFriendRequests = async (userId) => {
     return await FriendRequest.find({ receiverId: userId }).populate("senderId", "displayName avatarUrl");
 };
-module.exports = { createFriendRequest, updateFriendRequest, getSentFriendRequests, getReceivedFriendRequests };
+module.exports = {checkFriend, createFriendRequest, updateFriendRequest, getSentFriendRequests, getReceivedFriendRequests };

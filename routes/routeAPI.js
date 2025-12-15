@@ -7,7 +7,7 @@ const upload = multer({ storage });
 const { googleCallback, loginController } = require("../controllers/auth.controller");
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController, findRoomController, UpdateRoomController, UpdateRoompasswordController } = require('../controllers/room.controller');
-const { createUserController, profileCOntroller, updateavatarController } = require('../controllers/user.controller');
+const { createUserController, profileCOntroller, updateavatarController, searchUserController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
@@ -24,6 +24,7 @@ router.get("/room/:roomId", getRoomByRoomIdController);
 router.patch("/room/:roomId", authenticateToken, upload.single("avatar"), UpdateRoomController);
 router.patch("/roompassword/:roomId", authenticateToken, UpdateRoompasswordController);
 // User
+router.get("/search", authenticateToken,searchUserController);
 router.post("/register", createUserController);
 router.post("/login", loginController)
 router.get("/profile", authenticateToken, profileCOntroller)
