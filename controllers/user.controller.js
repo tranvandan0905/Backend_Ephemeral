@@ -1,4 +1,4 @@
-const { createUser, updateavatar } = require("../services/user.service");
+const { createUser, updateavatar, searchUser } = require("../services/user.service");
 
 exports.createUserController = async (req, res) => {
     try {
@@ -29,7 +29,7 @@ exports.createUserController = async (req, res) => {
 exports.profileCOntroller = async (req, res) => {
     const profile = req.user;
     res.status(200).json(
-         profile
+        profile
     )
 }
 exports.updateavatarController = async (req, res) => {
@@ -42,7 +42,7 @@ exports.updateavatarController = async (req, res) => {
                 message: "Vui lòng chọn ảnh avatar!",
             });
         }
-        const avatarUrl = await updateavatar(userId,avatar);
+        const avatarUrl = await updateavatar(userId, avatar);
 
         return res.status(200).json({
             success: true,
@@ -57,4 +57,30 @@ exports.updateavatarController = async (req, res) => {
             error: error.message,
         });
     }
+};
+exports.searchUserController = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { keyword } = req.query;
+
+    if (!keyword || !keyword.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu từ khóa tìm kiếm"
+      });
+    }
+
+    const users = await searchUser(userId, keyword.trim());
+
+    return res.status(200).json(users);
+
+  } catch (error) {
+    console.error("searchUserController error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Có lỗi xảy ra",
+      error: error.message
+    });
+  }
 };
