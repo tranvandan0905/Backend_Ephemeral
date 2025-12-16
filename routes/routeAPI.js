@@ -12,6 +12,7 @@ const { sendMessage, getMessages } = require('../controllers/message.controller'
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
 const { deleteFriendcontroller, getFriendcontroller } = require('../controllers/friends.controller');
+const { createPostController, getPostByUserIdController, getPostController } = require('../controllers/post.controller');
 
 const router = express.Router();
 // Google login
@@ -46,5 +47,9 @@ router.get("/friend", authenticateToken, getFriendcontroller)
 
 router.get("/sentfriend", authenticateToken, getSentFriendRequestscontroller)
 router.get("/receivedfriend", authenticateToken, getReceivedFriendRequestscontroller)
+// Post
+router.post("/post",authenticateToken,createPostController)
+router.get("/postuser", authenticateToken, getPostByUserIdController)
+router.get("/post", authenticateToken, getPostController)
 module.exports = router;
 
