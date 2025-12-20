@@ -1,4 +1,4 @@
-const { createUser, updateavatar, searchUser } = require("../services/user.service");
+const { createUser, updateavatar, searchUser, FindIDUser } = require("../services/user.service");
 
 exports.createUserController = async (req, res) => {
     try {
@@ -27,9 +27,10 @@ exports.createUserController = async (req, res) => {
     }
 };
 exports.profileCOntroller = async (req, res) => {
-    const profile = req.user;
+    const profile = req.user._id;
+    const user = await FindIDUser(profile);
     res.status(200).json(
-        profile
+        user
     )
 }
 exports.updateavatarController = async (req, res) => {
