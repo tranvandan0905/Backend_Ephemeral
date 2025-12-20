@@ -50,7 +50,8 @@ const loginController = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ success: false, message: "Sai mật khẩu!" });
     const token = jwt.sign(
-      { _id: user._id, roles: user.roles, displayName: user.displayName, email: user.email,avatarUrl: user.avatarUrl  },
+      { _id: user._id, roles: user.roles, displayName: user.displayName, email: user.email,avatarUrl: user.avatarUrl
+  },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
