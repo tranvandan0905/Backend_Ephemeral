@@ -13,6 +13,8 @@ const { FindMembershipRoomIDController, createMembershipController, findMembersh
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
 const { deleteFriendcontroller, getFriendcontroller } = require('../controllers/friends.controller');
 const { createPostController, getPostByUserIdController, getPostController } = require('../controllers/post.controller');
+const { getLike, postlike, deletelike } = require('../controllers/like.controller');
+const { getComments, createComment, deleteComment } = require('../controllers/comment.controller');
 
 const router = express.Router();
 // Google login
@@ -51,5 +53,13 @@ router.get("/receivedfriend", authenticateToken, getReceivedFriendRequestscontro
 router.post("/post",authenticateToken,createPostController)
 router.get("/postuser", authenticateToken, getPostByUserIdController)
 router.get("/post", authenticateToken, getPostController)
+// Like
+router.get('/like/:postId',authenticateToken, getLike);
+router.post('/like',authenticateToken, postlike);
+router.delete('/like/:postId',authenticateToken, deletelike);
+// Comment 
+router.get("/comment/:postId", authenticateToken,getComments);
+router.post("/comment", authenticateToken,createComment);
+router.delete("comment/:commentId", authenticateToken,deleteComment);
 module.exports = router;
 
