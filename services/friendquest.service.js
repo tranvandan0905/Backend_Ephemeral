@@ -36,25 +36,30 @@ const createFriendRequest = async (userId, data) => {
     return friendRequestDoc;
 };
 
-const updateFriendRequest = async (userId, friendrequestId, data) => {
+const updateFriendRequest = async (userId, receiverId, data) => {
     const { status } = data;
+    const req = await FriendRequest.findOne({
+        $or: [
+            { senderId: userId, receiverId: receiverId },
+            { senderId: receiverId, receiverId: userId }
+        ]
+    });
 
-    const req = await FriendRequest.findById(friendrequestId);
 
     if (!req) throw new Error("Không tìm thấy lời mời kết bạn");
 
     if (status === "accepted") {
-        await createFriend(userId, req.senderId);
-        await FriendRequest.findByIdAndDelete(friendrequestId);
+        await createFriend(userId, receiverId);
+        await FriendRequest.findByIdAndDelete(req._id);
 
         return req;
 
     } else if (status === "rejected") {
-        await FriendRequest.findByIdAndDelete(friendrequestId);
+        await FriendRequest.findByIdAndDelete(req._id);
         return true;
     }
     else if (status === "canceled") {
-        await FriendRequest.findByIdAndDelete(friendrequestId);
+        await FriendRequest.findByIdAndDelete(req._id);
         return true;
     }
 
@@ -63,7 +68,15 @@ const updateFriendRequest = async (userId, friendrequestId, data) => {
 
 
 const getSentFriendRequests = async (userId) => {
-    return await FriendRequest.find({ senderId: userId }).populate("receiverId", "displayName avatarUrl");
+     const requests = await FriendRequest.find({ senderId: userId })
+    .populate("receiverId", "displayName avatarUrl")
+    .lean();
+  return requests.map(r => ({
+    receiverId: r.receiverId._id,
+    displayName: r.receiverId.displayName,
+    avatarUrl: r.receiverId.avatarUrl,
+    status: r.status
+  })); 
 };
 const FRIEND_STATUS = {
     FRIEND: "FRIEND",
@@ -108,6 +121,16 @@ const checkFriend = async (userId, targetUserId) => {
 
 
 const getReceivedFriendRequests = async (userId) => {
-    return await FriendRequest.find({ receiverId: userId }).populate("senderId", "displayName avatarUrl");
+  const requests = await FriendRequest.find({ receiverId: userId })
+    .populate("senderId", "displayName avatarUrl")
+    .lean();
+
+  return requests.map(r => ({
+    receiverId: r.senderId._id,
+    displayName: r.senderId.displayName,
+    avatarUrl: r.senderId.avatarUrl,
+    status: r.status
+  }));
 };
-module.exports = {checkFriend, createFriendRequest, updateFriendRequest, getSentFriendRequests, getReceivedFriendRequests };
+
+module.exports = { checkFriend, createFriendRequest, updateFriendRequest, getSentFriendRequests, getReceivedFriendRequests };
