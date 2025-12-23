@@ -25,39 +25,11 @@ const handleCreateComment = async ({
 
   return comment;
 };
-
-
-const handleDeleteComment = async (commentId, userId) => {
-  const comment = await Comment.findById(commentId);
-
-  if (!comment) {
-    throw new Error("Comment không tồn tại");
-  }
-
-  if (comment.userId.toString() !== userId.toString()) {
-    throw new Error("Không có quyền xóa comment");
-  }
-
-  // soft delete
-  comment.isDeleted = true;
-  await comment.save();
-
-  // chỉ giảm nếu là comment gốc
-  if (!comment.parentId) {
-    await Post.findByIdAndUpdate(
-      comment.postId,
-      { $inc: { commentsCount: -1 } }
-    );
-  }
-
-  return true;
-};
-
 const handleGetComments = async (postId) => {
   const parents = await Comment.find({
     postId,
     parentId: null,
-    isDeleted: false
+
   })
     .populate("userId", "displayName avatarUrl")
     .sort({ createdAt: -1 })
@@ -66,10 +38,16 @@ const handleGetComments = async (postId) => {
   const replies = await Comment.find({
     postId,
     parentId: { $ne: null },
-    isDeleted: false
+
   })
     .populate("userId", "displayName avatarUrl")
-    .populate("replyToId", "userId")
+    .populate({
+      path: "replyToId",                          // comment được reply
+      populate: {
+        path: "userId",                           // user của comment đó
+        select: "displayName avatarUrl"
+      }
+    })
     .sort({ createdAt: 1 })
     .lean();
 
@@ -81,20 +59,22 @@ const handleGetComments = async (postId) => {
     if (!replyMap[parentKey]) replyMap[parentKey] = [];
 
     replyMap[parentKey].push({
-      replyId: r._id,                     
-      commentId: r.parentId,      
+      id: r._id,
+      parentId: r.parentId,
       userId: r.userId._id,
       displayName: r.userId.displayName,
       avatarUrl: r.userId.avatarUrl,
       content: r.content,
-      replyToUserId: r.replyToId?.userId || null,
+      replyToDisplayName: r.replyToId?.userId.displayName || null,
+      replyToAvatarUrl: r.replyToId?.userId.avatarUrl || null,
       createdAt: r.createdAt
     });
   });
 
   // build final response
   return parents.map(c => ({
-    commentId: c._id,
+    id: c._id,
+    parentId: c._id,
     userId: c.userId._id,
     displayName: c.userId.displayName,
     avatarUrl: c.userId.avatarUrl,
@@ -105,16 +85,48 @@ const handleGetComments = async (postId) => {
 };
 
 
-const deleteCommentMany = async (postId) => {
-  return await Comment.updateMany(
-    { postId },
-    { isDeleted: true }
+const handleDeleteCommentPostMany = async (postId) => {
+  return await Comment.deleteMany(
+    { postId }
   );
 };
 
+const handleDeleteComment = async (commentId, userId) => {
+  // 1. Lấy comment đang bị xóa
+  const targetComment = await Comment.findById(commentId);
+  if (!targetComment) {
+    throw new Error("Comment không tồn tại");
+  }
+
+  // 2. Nếu là COMMENT CHA
+  if (!targetComment.parentId) {
+    if (targetComment.userId.toString() !== userId.toString()) {
+      throw new Error("Bạn không có quyền xóa comment này");
+    }
+
+    // Xóa cha + toàn bộ con
+    return await Comment.deleteMany({
+      $or: [
+        { _id: targetComment._id },
+        { parentId: targetComment._id },
+        { replyToId: targetComment._id }
+      ]
+    });
+  }
+
+
+  if (targetComment.userId.toString() !== userId.toString()) {
+    throw new Error("Bạn không có quyền xóa reply này");
+  }
+
+  return await Comment.deleteOne({ _id: targetComment._id });
+};
+
+
 module.exports = {
   handleCreateComment,
-  handleDeleteComment,
+  handleDeleteCommentPostMany,
   handleGetComments,
-  deleteCommentMany
+  handleDeleteComment
+
 };

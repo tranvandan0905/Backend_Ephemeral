@@ -61,6 +61,6 @@ router.get('/like/check/:postId', authenticateToken, findlike);
 // Comment 
 router.get("/comment/:postId", authenticateToken,getComments);
 router.post("/comment", authenticateToken,createComment);
-router.delete("comment/:commentId", authenticateToken,deleteComment);
+router.delete("/comment/:commentId", authenticateToken,deleteComment);
 module.exports = router;
 

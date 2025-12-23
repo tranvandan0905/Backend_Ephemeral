@@ -1,15 +1,14 @@
 const FriendRequest = require("../models/friendrequest.model");
-const { createFriend } = require("./friends.service");
-const { FindIDUser } = require("./user.service");
 const Friend = require("../models/friends.model");
+const User = require("../models/user.model");
+const { createFriend } = require("./friends.service");
 const createFriendRequest = async (userId, data) => {
     const { receiverId } = data;
 
     if (userId === receiverId) {
         throw new Error("Không thể gửi lời mời cho chính mình");
     }
-
-    const user = await FindIDUser(receiverId);
+    const user  = await User.findById(receiverId);
     if (!user) throw new Error("Không tìm thấy người nhận");
 
     const existed = await FriendRequest.findOne({
@@ -86,18 +85,6 @@ const FRIEND_STATUS = {
 };
 
 const checkFriend = async (userId, targetUserId) => {
-    // Đã là bạn bè
-    const isFriend = await Friend.exists({
-        $or: [
-            { userId1: userId, userId2: targetUserId },
-            { userId1: targetUserId, userId2: userId }
-        ]
-    });
-
-    if (isFriend) {
-        return { status: FRIEND_STATUS.FRIEND };
-    }
-
     //Kiểm tra lời mời kết bạn 
     const request = await FriendRequest.findOne({
         $or: [

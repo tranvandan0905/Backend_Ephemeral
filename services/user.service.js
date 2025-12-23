@@ -3,6 +3,7 @@ const User = require('../models/user.model')
 const bcrypt = require("bcryptjs");
 const Friend = require("../models/friends.model");
 const { uploadToCloudinary } = require('./cloudinary.service');
+const { checkFriend } = require('./friendquest.service');
 const createUser = async (displayName, email, password) => {
   const checkemail = await User.findOne({ email });
   if (checkemail)
@@ -51,13 +52,25 @@ const isEmail = (value) => {
 const searchUser = async (userId, keyword) => {
   if (!keyword) return [];
   const userIdStr = userId.toString();
+
   // Search theo email
   if (isEmail(keyword)) {
     const user = await User.findOne({
       email: keyword.toLowerCase()
-    }).select("_id displayName avatarUrl email");
-    return user ? [user] : [];
+    }).select("_id displayName avatarUrl email").lean();
+
+    if (!user) return [];
+
+    const isFriend = await checkFriend(userIdStr, user._id.toString());
+
+    return [
+      {
+        ...user,
+        checkfriend:isFriend.status
+      }
+    ];
   }
+
   // Search theo tên trong friend
   const friends = await Friend.find({
     $or: [
@@ -81,4 +94,4 @@ const searchUser = async (userId, keyword) => {
 };
 
 
-module.exports = { createUser, FindIDUser, updateavatar ,searchUser};
+module.exports = { createUser, FindIDUser, updateavatar, searchUser };
