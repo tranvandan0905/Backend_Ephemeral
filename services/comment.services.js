@@ -65,8 +65,8 @@ const handleGetComments = async (postId) => {
       displayName: r.userId.displayName,
       avatarUrl: r.userId.avatarUrl,
       content: r.content,
+      replyToUserId: r.replyToId?.userId._id || null,
       replyToDisplayName: r.replyToId?.userId.displayName || null,
-      replyToAvatarUrl: r.replyToId?.userId.avatarUrl || null,
       createdAt: r.createdAt
     });
   });
