@@ -25,6 +25,9 @@ module.exports = {
     try {
       const userId = req.user._id;
       const { postId, content, parentId, replyToId } = req.body;
+      if (!content)
+        throw new Error("Thiếu dữ liệu cmt");
+
 
       await handleCreateComment({
         userId,
@@ -49,11 +52,9 @@ module.exports = {
 
   deleteComment: async (req, res) => {
     try {
-      const userId = req.user._id;
       const { commentId } = req.params;
-
+      const userId = req.user._id;
       await handleDeleteComment(commentId, userId);
-
       return res.status(200).json({
         success: true,
         message: "Đã xóa bình luận!"

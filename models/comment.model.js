@@ -29,11 +29,9 @@ const commentSchema = new mongoose.Schema(
       ref: "Comment",
       default: null
     },
-
-    isDeleted: {
-      type: Boolean,
-      default: false
-    }
-  },{ timestamps: true });
-
+  }, { timestamps: true });
+commentSchema.index({ parentId: 1 });
+commentSchema.index({ replyToId: 1 });
+commentSchema.index({ postId: 1 });
+commentSchema.index({ userId: 1 });
 module.exports = mongoose.model("Comment", commentSchema);
