@@ -187,7 +187,7 @@ const UpdateRoom = async (userId, roomId, avatar, roomData = {}) => {
     usersCount: Count ?? room.usersCount,
     isPrivate: room.isPrivate,
     expiresAt: expireDate,
-    createdBy: userId,
+    createdBy: room.userId,
   };
 
   await Room.updateOne({ _id: room._id }, { $set: roomUpdateData });

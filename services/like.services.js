@@ -16,7 +16,17 @@ const handlePostLike = async (postId, userId) => {
 
     return true;
 };
+const handleFindLike = async (postId, userId) => {
 
+    if (!userId) {
+        return false;
+    }
+    const result = await Like.findOne({ postId, userId });
+    if (result) {
+        return true;
+    }
+    return false;
+};
 const handleDeleteLike = async (postId, userId) => {
     const deleted = await Like.findOneAndDelete({ postId, userId });
 
@@ -44,4 +54,4 @@ const handleGetLike = async (postId) => {
         avatarUrl: r.userId.avatarUrl,
     }));
 }
-module.exports = { handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany };
+module.exports = { handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany, handleFindLike };

@@ -1,5 +1,5 @@
 
-const { handleGetLike, handlePostLike, handleDeleteLike } = require('../services/like.services');
+const { handleGetLike, handlePostLike, handleDeleteLike, handleFindLike } = require('../services/like.services');
 module.exports = {
     getLike: async (req, res) => {
         try {
@@ -45,6 +45,19 @@ module.exports = {
             res.status(500).json({
                 success: false,
                 message: err.message || "Lỗi server",
+            });
+        }
+    },
+      findlike: async (req, res) => {
+        try {
+            const { postId } = req.params;
+            const userId = req.user._id;
+            const result = await handleFindLike(postId, userId);
+            return res.status(200).json( result);
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message || "Lỗi server",
             });
         }
     },
