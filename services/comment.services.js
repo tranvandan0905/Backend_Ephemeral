@@ -75,12 +75,14 @@ const handleGetComments = async (postId) => {
 
   // group replies theo parentId
   const replyMap = {};
-  replies.forEach(r => {
-    const key = r.parentId.toString();
-    if (!replyMap[key]) replyMap[key] = [];
 
-    replyMap[key].push({
-      commentId: r._id,
+  replies.forEach(r => {
+    const parentKey = r.parentId.toString();
+    if (!replyMap[parentKey]) replyMap[parentKey] = [];
+
+    replyMap[parentKey].push({
+      replyId: r._id,                     
+      commentId: r.parentId,      
       userId: r.userId._id,
       displayName: r.userId.displayName,
       avatarUrl: r.userId.avatarUrl,
