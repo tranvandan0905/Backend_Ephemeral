@@ -1,14 +1,15 @@
 const Message = require("../models/message.model");
+const Room = require("../models/room.model")
 const { uploadToCloudinary } = require("./cloudinary.service");
-const { updateLastMessage } = require("./conversation.service");
+const { updateLastMessage, share } = require("./conversation.service");
 const { findMembershipUserID } = require("./membership.service");
 const { findRoomID } = require("./room.service");
 const { FindIDUser } = require("./user.service");
-
+const Post = require("../models/post.model");
 const handecreateMessage = async (roomId, userId, text, image) => {
     const user = await FindIDUser(userId);
     const room_ID = await findRoomID(roomId);
-    const checkuser = await findMembershipUserID(userId,room_ID._id);
+    const checkuser = await findMembershipUserID(userId, room_ID._id);
     if (!checkuser) {
         throw new Error("Bạn phải tham gia!");
     }
@@ -35,15 +36,76 @@ const handecreateMessage = async (roomId, userId, text, image) => {
 
     return savedMessage;
 };
-const handegetMessagesByConversation = async (roomId) => {
-    const room_ID = await findRoomID(roomId);
-    
-    return await Message.find({
-        roomId: room_ID._id,
-    })
-    .sort({ createdAt: -1 }) 
-    .select("userId displayName avatarUrl type text imageUrl createdAt");
+const findPostID = async (_id) => {
+    const result = await Post.findOne({ _id });
+    return result;
+};
+const handecreateMessageShare = async (postId, friendId, userId) => {
+    const post = await findPostID(postId);
+    const exist = await Room.findOne({
+        $or: [
+            { participant: userId, createdBy: friendId },
+            { participant: friendId, createdBy: userId }
+        ]
+    });
+
+    const user = await FindIDUser(userId);
+    const message = new Message({
+        roomId: exist._id,
+        userId,
+        postId: post._id,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        text: post.content,
+
+    });
+    const [savedMessage, _] = await Promise.all([
+        message.save(),
+        share(post._id, userId, exist._id, post.content)
+    ]);
+    return savedMessage
+}
+const handegetMessagesByConversation = async (
+  roomId,
+  page = 1,
+  limit = 10
+) => {
+  const room_ID = await findRoomID(roomId);
+
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
+
+  const skip = (page - 1) * limit;
+
+  const query = {
+    roomId: room_ID._id
+  };
+
+  // 🔹 Tổng số message
+  const total = await Message.countDocuments(query);
+
+  // 🔹 Lấy message theo page
+  const messages = await Message.find(query)
+    .sort({ createdAt: -1 }) // mới → cũ
+    .skip(skip)
+    .limit(limit)
+    .select(
+      "userId postId displayName avatarUrl type text imageUrl createdAt"
+    )
+    .lean();
+
+  return {
+    data: messages,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPrevPage: page > 1
+    }
+  };
 };
 
-module.exports = { handecreateMessage, handegetMessagesByConversation };
+module.exports = { handecreateMessage, handecreateMessageShare, handegetMessagesByConversation };
 

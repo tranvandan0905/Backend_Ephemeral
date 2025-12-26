@@ -66,17 +66,58 @@ const updateFriendRequest = async (userId, receiverId, data) => {
 };
 
 
-const getSentFriendRequests = async (userId) => {
-     const requests = await FriendRequest.find({ senderId: userId })
+const getSentFriendRequests = async (userId, page = 1, limit = 10) => {
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
+
+  const skip = (page - 1) * limit;
+
+  const query = { senderId: userId };
+
+  // 🔹 Tổng số request đã gửi
+  const total = await FriendRequest.countDocuments(query);
+
+  if (total === 0) {
+    return {
+      data: [],
+      pagination: {
+        page,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    };
+  }
+
+  const requests = await FriendRequest.find(query)
     .populate("receiverId", "displayName avatarUrl")
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
     .lean();
-  return requests.map(r => ({
-    receiverId: r.receiverId._id,
-    displayName: r.receiverId.displayName,
-    avatarUrl: r.receiverId.avatarUrl,
+
+  const data = requests.map(r => ({
+    receiverId: r.receiverId?._id || null,
+    displayName: r.receiverId?.displayName || null,
+    avatarUrl: r.receiverId?.avatarUrl || null,
     status: r.status
-  })); 
+  }));
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPrevPage: page > 1
+    }
+  };
 };
+
 const FRIEND_STATUS = {
     FRIEND: "FRIEND",
     SENT: "SENT",
@@ -107,17 +148,56 @@ const checkFriend = async (userId, targetUserId) => {
 };
 
 
-const getReceivedFriendRequests = async (userId) => {
-  const requests = await FriendRequest.find({ receiverId: userId })
+const getReceivedFriendRequests = async (userId, page = 1, limit = 10) => {
+  page = Number(page) || 1;
+  limit = Number(limit) || 10;
+
+  const skip = (page - 1) * limit;
+
+  const query = { receiverId: userId };
+
+  // 🔹 Tổng số request nhận được
+  const total = await FriendRequest.countDocuments(query);
+
+  if (total === 0) {
+    return {
+      data: [],
+      pagination: {
+        page,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    };
+  }
+
+  const requests = await FriendRequest.find(query)
     .populate("senderId", "displayName avatarUrl")
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
     .lean();
 
-  return requests.map(r => ({
-    receiverId: r.senderId._id,
-    displayName: r.senderId.displayName,
-    avatarUrl: r.senderId.avatarUrl,
+  const data = requests.map(r => ({
+    senderId: r.senderId?._id || null,
+    displayName: r.senderId?.displayName || null,
+    avatarUrl: r.senderId?.avatarUrl || null,
     status: r.status
   }));
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPrevPage: page > 1
+    }
+  };
 };
 
 module.exports = { checkFriend, createFriendRequest, updateFriendRequest, getSentFriendRequests, getReceivedFriendRequests };

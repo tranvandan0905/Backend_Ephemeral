@@ -12,9 +12,10 @@ const { sendMessage, getMessages } = require('../controllers/message.controller'
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
 const { deleteFriendcontroller, getFriendcontroller } = require('../controllers/friends.controller');
-const { createPostController, getPostByUserIdController, getPostController } = require('../controllers/post.controller');
+const { createPostController, getPostByUserIdController, getPostController, getfindPostController } = require('../controllers/post.controller');
 const { getLike, postlike, deletelike, findlike } = require('../controllers/like.controller');
 const { getComments, createComment, deleteComment } = require('../controllers/comment.controller');
+const { shareController } = require('../controllers/share.controller');
 
 const router = express.Router();
 // Google login
@@ -35,6 +36,8 @@ router.patch("/avatar", authenticateToken, upload.single("avatarUrl"), updateava
 // Message
 router.post("/message", authenticateToken, upload.single("image"), sendMessage)
 router.get("/message/:roomId", authenticateToken, getMessages)
+// Share
+router.post("/share", authenticateToken, shareController)
 // Membership
 router.get("/membership/:roomId", authenticateToken, FindMembershipRoomIDController)
 router.post("/membership", authenticateToken, createMembershipController)
@@ -53,11 +56,12 @@ router.get("/receivedfriend", authenticateToken, getReceivedFriendRequestscontro
 router.post("/post",authenticateToken,createPostController)
 router.get("/postuser", authenticateToken, getPostByUserIdController)
 router.get("/post", authenticateToken, getPostController)
+router.get("/findpost/:postId", authenticateToken, getfindPostController)
 // Like
 router.get('/like/:postId',authenticateToken, getLike);
 router.post('/like',authenticateToken, postlike);
 router.delete('/like/:postId',authenticateToken, deletelike);
-router.get('/like/check/:postId', authenticateToken, findlike);
+router.post('/like/check', authenticateToken, findlike);
 // Comment 
 router.get("/comment/:postId", authenticateToken,getComments);
 router.post("/comment", authenticateToken,createComment);

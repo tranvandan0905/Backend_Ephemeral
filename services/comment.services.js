@@ -25,63 +25,88 @@ const handleCreateComment = async ({
 
   return comment;
 };
-const handleGetComments = async (postId) => {
+const handleGetComments = async (postId, page = 1, limit = 5) => {
+  page = Number(page) || 1;
+  limit = Number(limit) || 5;
+  const skip = (page - 1) * limit;
+
+
+  const totalParents = await Comment.countDocuments({
+    postId,
+    parentId: null,
+  });
+
+
   const parents = await Comment.find({
     postId,
     parentId: null,
-
   })
     .populate("userId", "displayName avatarUrl")
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .lean();
+
+  const parentIds = parents.map(p => p._id);
+
 
   const replies = await Comment.find({
     postId,
-    parentId: { $ne: null },
-
+    parentId: { $in: parentIds },
   })
     .populate("userId", "displayName avatarUrl")
     .populate({
-      path: "replyToId",                          // comment được reply
+      path: "replyToId",
       populate: {
-        path: "userId",                           // user của comment đó
-        select: "displayName avatarUrl"
-      }
+        path: "userId",
+        select: "displayName avatarUrl",
+      },
     })
     .sort({ createdAt: 1 })
     .lean();
 
-  // group replies theo parentId
+
   const replyMap = {};
-
   replies.forEach(r => {
-    const parentKey = r.parentId.toString();
-    if (!replyMap[parentKey]) replyMap[parentKey] = [];
+    const key = r.parentId.toString();
+    if (!replyMap[key]) replyMap[key] = [];
 
-    replyMap[parentKey].push({
+    replyMap[key].push({
       id: r._id,
-      parentId: r.parentId,
+      parentId: r.parentId, 
       userId: r.userId._id,
       displayName: r.userId.displayName,
       avatarUrl: r.userId.avatarUrl,
       content: r.content,
-      replyToUserId: r.replyToId?.userId._id || null,
-      replyToDisplayName: r.replyToId?.userId.displayName || null,
-      createdAt: r.createdAt
+      replyToUserId: r.replyToId?.userId?._id || null,
+      replyToDisplayName: r.replyToId?.userId?.displayName || null,
+      createdAt: r.createdAt,
     });
   });
 
-  // build final response
-  return parents.map(c => ({
+  // 5️⃣ Build response GIỐNG FORMAT CŨ
+  const data = parents.map(c => ({
     id: c._id,
-    parentId: c._id,
+    parentId: c._id, 
     userId: c.userId._id,
     displayName: c.userId.displayName,
     avatarUrl: c.userId.avatarUrl,
     content: c.content,
     createdAt: c.createdAt,
-    replies: replyMap[c._id.toString()] || []
+    replies: replyMap[c._id.toString()] || [],
   }));
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total: totalParents,
+      totalPages: Math.ceil(totalParents / limit),
+      hasNextPage: page * limit < totalParents,
+      hasPrevPage: page > 1,
+    },
+  };
 };
 
 

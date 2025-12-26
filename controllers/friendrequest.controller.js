@@ -3,6 +3,7 @@ const { createFriendRequest, updateFriendRequest, getSentFriendRequests, getRece
 exports.createfriendrequestController = async (req, res) => {
     try {
         const userId = req.user._id;
+
         const friendrequest = await createFriendRequest(userId, req.body);
         res.status(200).json(
             {
@@ -42,7 +43,8 @@ exports.updatefriendrequestController = async (req, res) => {
 exports.getSentFriendRequestscontroller = async (req, res) => {
     try {
         const userId = req.user._id;
-        const data = await getSentFriendRequests(userId);
+        const { page, limit } = req.query;
+        const data = await getSentFriendRequests(userId, page, limit);
     res.status(200).json(data);
     } catch (err) {
         res.status(500).json({
@@ -54,7 +56,8 @@ exports.getSentFriendRequestscontroller = async (req, res) => {
 exports.getReceivedFriendRequestscontroller = async (req, res) => {
     try {
         const userId = req.user._id;
-        const data = await getReceivedFriendRequests(userId);
+        const { page, limit } = req.query;
+        const data = await getReceivedFriendRequests(userId, page, limit);
     res.status(200).json(data);
     } catch (err) {
         res.status(500).json({

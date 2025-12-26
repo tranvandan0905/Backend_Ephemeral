@@ -52,63 +52,63 @@ const FindMembershipRoomID = async (roomId, userId) => {
   );
 
   return members.map(m => {
-  const targetId = m.userId._id.toString();
-  let checkfriend = "NONE";
+    const targetId = m.userId._id.toString();
+    let checkfriend = "NONE";
 
-  if (targetId === userId.toString()) {
-    checkfriend = "SELF";
-  } 
-  else if (friendSet.has(targetId)) {
-    checkfriend = "FRIEND";
-  } 
-  else if (sentSet.has(targetId)) {
-    checkfriend = "SENT";
- 
-  } 
-  else if (receivedSet.has(targetId)) {
-    checkfriend = "RECEIVED";
-   
-  }
+    if (targetId === userId.toString()) {
+      checkfriend = "SELF";
+    }
+    else if (friendSet.has(targetId)) {
+      checkfriend = "FRIEND";
+    }
+    else if (sentSet.has(targetId)) {
+      checkfriend = "SENT";
 
-  return {
-    userId: m.userId._id,
-    displayName: m.userId.displayName,
-    avatarUrl: m.userId.avatarUrl,
-    roomId: m.roomId,
-    role: m.role,
-    expiresAt: m.expiresAt,
-    status: m.status,
-    joinedAt: m.joinedAt,
-    checkfriend,
-    receiverId:m.userId._id
-  };
-});
+    }
+    else if (receivedSet.has(targetId)) {
+      checkfriend = "RECEIVED";
+
+    }
+
+    return {
+      userId: m.userId._id,
+      displayName: m.userId.displayName,
+      avatarUrl: m.userId.avatarUrl,
+      roomId: m.roomId,
+      role: m.role,
+      expiresAt: m.expiresAt,
+      status: m.status,
+      joinedAt: m.joinedAt,
+      checkfriend,
+      receiverId: m.userId._id
+    };
+  });
 };
 
 const findMembershipUserID = async (userId, roomId) => {
 
-    const result = await Membership.findOne({ userId, roomId });
-    return result;
+  const result = await Membership.findOne({ userId, roomId });
+  return result;
 };
 const createMembership = async (userId, roomId, password) => {
-    const room = await findRoomID(roomId);
+  const room = await findRoomID(roomId);
 
 
-    if (room.isPrivate) {
-        const isMatch = await bcrypt.compare(password, room.passwordHash);
-        if (!isMatch) {
-            throw new Error("Sai mật khẩu!")
-        }
+  if (room.isPrivate) {
+    const isMatch = await bcrypt.compare(password, room.passwordHash);
+    if (!isMatch) {
+      throw new Error("Sai mật khẩu!")
     }
-    const membership = new Membership({
-        roomId: room._id,
-        userId,
-        expiresAt: room.expiresAt,
-        role: "member",
-    });
-    await UpdateRoom(userId, roomId, null, { usersCount: 1 });
-    await membership.save();
-    return membership;
+  }
+  const membership = new Membership({
+    roomId: room._id,
+    userId,
+    expiresAt: room.expiresAt,
+    role: "member",
+  });
+  await UpdateRoom(userId, roomId, null, { usersCount: 1 });
+  await membership.save();
+  return membership;
 
 
 }
