@@ -177,12 +177,8 @@ const getRoomsByUserID = async (userId) => {
         return {
           roomId: room.roomId,
 
-          // ✅ SAFE
-          participant: room.participant?.displayName || null,
-          avatarUrl: room.participant?.avatarUrl || null,
-
-          name: room.name || null,
-          avatar: room.avatar || null,
+          name: room.name || room.participant?.displayName,
+          avatar: room.avatar || room.participant?.avatarUrl,
 
           displayName: conversation?.userId?.displayName || null,
           text: conversation?.text || "Chưa có tin nhắn nào!",
