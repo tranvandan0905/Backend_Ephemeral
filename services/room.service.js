@@ -167,19 +167,39 @@ const getRoomsByUserID = async (userId) => {
     })
       .populate({
         path: "roomId",
-        select: "roomId name avatar participant usersCount isPrivate",
-        populate: {
-          path: "participant",
-          select: "displayName avatarUrl"
-        }
+        select: "roomId name avatar participant createdBy usersCount isPrivate",
+        populate: [
+          {
+            path: "participant",
+            select: "displayName avatarUrl"
+          },
+          {
+            path: "createdBy",
+            select: "displayName avatarUrl"
+          }
+        ]
       })
       .lean();
+
+
 
     if (!memberships.length) return [];
 
     const roomsFlatten = await Promise.all(
       memberships.map(async (membership) => {
+        let otherUser = null;
         const room = membership.roomId;
+        if (room.participant) {
+          if (room.createdBy?._id.toString() === userId.toString()) {
+            otherUser = room.participant;
+          } else if (room.participant?._id.toString() === userId.toString()) {
+            otherUser = room.createdBy;
+          }
+        } else {
+          // Trường hợp chưa có participant
+          otherUser = room.createdBy;
+        }
+        console.log(room);
         if (!room) return null;
 
         const conversation = await Conversation.findOne({
@@ -191,10 +211,8 @@ const getRoomsByUserID = async (userId) => {
 
         return {
           roomId: room.roomId,
-
-          name: room.name || room.participant?.displayName,
-          avatar: room.avatar || room.participant?.avatarUrl,
-
+          name: room.name || otherUser?.displayName,
+          avatar: room.avatar || otherUser?.avatarUrl,
           displayName: conversation?.userId?.displayName || null,
           text: conversation?.text || "Chưa có tin nhắn nào!",
           lastUpdated: conversation?.lastUpdated || null,
