@@ -16,17 +16,38 @@ const handlePostLike = async (postId, userId) => {
 
     return true;
 };
-const handleFindLike = async (postId, userId) => {
-
+const handleFindLike = async (data, userId) => {
     if (!userId) {
-        return false;
+        return data.map(item => ({
+            postId: item.postId,
+            isLiked: false
+        }));
     }
-    const result = await Like.findOne({ postId, userId });
-    if (result) {
-        return true;
-    }
-    return false;
+    //  Lấy danh sách postId
+    const postIds = data.map(item => item.postId);
+
+    //  Lấy tất cả like của user cho các post này
+    const userLikes = await Like.find({
+        postId: { $in: postIds },
+        userId
+    })
+        .select("postId")
+        .lean();
+
+    // Convert sang Set để check nhanh
+    const likedPostIds = new Set(
+        userLikes.map(like => like.postId.toString())
+    );
+
+    // Map lại data trả về
+    const result = data.map(item => ({
+        postId: item.postId,
+        isLiked: likedPostIds.has(item.postId.toString())
+    }));
+
+    return result;
 };
+
 const handleDeleteLike = async (postId, userId) => {
     const deleted = await Like.findOneAndDelete({ postId, userId });
 
@@ -45,7 +66,7 @@ const handleDeleteLike = async (postId, userId) => {
 
 
 const deletelikeMany = async (postId) => {
-    return await like.deleteMany({ postId });
+    return await Like.deleteMany({ postId });
 }
 const handleGetLike = async (postId) => {
     const data = await Like.find({ postId }).populate("userId", "displayName avatarUrl").lean();

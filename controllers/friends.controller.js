@@ -19,7 +19,8 @@ exports.deleteFriendcontroller = async (req, res) => {
 exports.getFriendcontroller = async (req, res) => {
     try {
         const userId = req.user._id;
-        const data = await getFriend(userId);
+        const { page, limit } = req.query;
+        const data = await getFriend(userId, page, limit);
     res.status(200).json(data);
     } catch (err) {
         res.status(500).json({

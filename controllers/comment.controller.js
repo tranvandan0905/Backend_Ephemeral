@@ -9,7 +9,8 @@ module.exports = {
   getComments: async (req, res) => {
     try {
       const { postId } = req.params;
-      const data = await handleGetComments(postId);
+      const { page, limit } = req.query;
+      const data = await handleGetComments(postId, page, limit);
 
       return res.status(200).json(data);
     } catch (err) {

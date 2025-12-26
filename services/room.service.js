@@ -22,9 +22,44 @@ const findRoomID = async (roomId) => {
   const result = await Room.findOne({ roomId });
   return result;
 };
+const createRoomUser = async (userId, participant) => {
+  try {
+    // Sinh roomId ngắn
+    const roomId = nanoid(10);
+    const room = new Room({
+      roomId,
+      usersCount: 2,
+      createdBy: userId,
+      participant,
+    });
+
+    await room.save();
+
+    const membershipcreatedBy = new Membership({
+      roomId: room._id,
+      userId,
+    });
+    const membershipparticipant = new Membership({
+      roomId: room._id,
+      userId: participant,
+    });
+    const conversation = new Conversation({
+      roomId: room._id,
+      userId,
+      text: "Chưa có tin nhắn nào!"
+    })
+    await conversation.save();
+    await membershipcreatedBy.save();
+    await membershipparticipant.save();
+    return room;
+  } catch (error) {
+    console.error("Lỗi khi tạo room:", error);
+    throw new Error("Không thể tạo room");
+  }
+};
 const createRoom = async (userId, avatar, roomData) => {
   try {
-    const { name, description, expiresAt, password } = roomData;
+    const { name, expiresAt, password } = roomData;
     let isPrivate = false;
     // Hash mật khẩu nếu là phòng riêng tư
     let passwordHash = null;
@@ -49,7 +84,6 @@ const createRoom = async (userId, avatar, roomData) => {
     const room = new Room({
       roomId,
       name,
-      description,
       avatar: avatarUrl || null,
       passwordHash,
       qrCode,
@@ -94,7 +128,6 @@ const getRoomByRoomId = async (roomId) => {
     const roomData = {
       roomId: room.roomId,
       name: room.name,
-      description: room.description,
       avatar: room.avatar,
       qrCode: room.qrCode,
       isPrivate: room.isPrivate,
@@ -113,25 +146,44 @@ const getRoomByRoomId = async (roomId) => {
 };
 const getRoomsByUserID = async (userId) => {
   try {
-    // Lấy các membership active của user
-    const memberships = await Membership.find({ userId, status: "active" })
-      .populate("roomId", "roomId name avatar");
+    const memberships = await Membership.find({
+      userId,
+      status: "active"
+    })
+      .populate({
+        path: "roomId",
+        select: "roomId name avatar participant usersCount isPrivate",
+        populate: {
+          path: "participant",
+          select: "displayName avatarUrl"
+        }
+      })
+      .lean();
 
     if (!memberships.length) return [];
 
     const roomsFlatten = await Promise.all(
       memberships.map(async (membership) => {
         const room = membership.roomId;
+        if (!room) return null;
 
-        // Lấy conversation mới nhất trong room
-        const conversation = await Conversation.findOne({ roomId: room._id })
-          .sort({ lastUpdated: -1 }) // lấy tin nhắn mới nhất
-          .populate("userId", "displayName");
+        const conversation = await Conversation.findOne({
+          roomId: room._id
+        })
+          .sort({ lastUpdated: -1 })
+          .populate("userId", "displayName")
+          .lean();
 
         return {
           roomId: room.roomId,
-          name: room.name,
+
+          // ✅ SAFE
+          participant: room.participant?.displayName || null,
+          avatarUrl: room.participant?.avatarUrl || null,
+
+          name: room.name || null,
           avatar: room.avatar || null,
+
           displayName: conversation?.userId?.displayName || null,
           text: conversation?.text || "Chưa có tin nhắn nào!",
           lastUpdated: conversation?.lastUpdated || null,
@@ -139,13 +191,14 @@ const getRoomsByUserID = async (userId) => {
       })
     );
 
-    return roomsFlatten;
+    return roomsFlatten.filter(Boolean);
 
   } catch (error) {
     console.error("Lỗi trong service getRoomsByUserID:", error);
     throw error;
   }
 };
+
 
 const UpdateRoom = async (userId, roomId, avatar, roomData = {}) => {
 
@@ -205,7 +258,7 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
   }
 
   let isPrivate = false;
-  let passwordHash=null;
+  let passwordHash = null;
   if (password) {
     passwordHash = await bcrypt.hash(password, 10);
     isPrivate = true;
@@ -221,5 +274,5 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
 };
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom, UpdateRoompassword
+  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom, UpdateRoompassword, createRoomUser
 };

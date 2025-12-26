@@ -1,4 +1,4 @@
-const { createPost, getPostByUserId, getPost } = require("../services/post.service");
+const { createPost, getPostByUserId, getPost, getfindPost } = require("../services/post.service");
 
 exports.createPostController = async (req, res) => {
     try {
@@ -18,8 +18,9 @@ exports.createPostController = async (req, res) => {
 };
 exports.getPostByUserIdController = async (req, res) => {
     try {
+        const { page, limit } = req.query;
         const userId = req.user._id;
-        const post = await getPostByUserId(userId);
+        const post = await getPostByUserId(userId, page, limit);
         res.status(200).json(post);
     } catch (error) {
         res.status(500).json({
@@ -30,7 +31,20 @@ exports.getPostByUserIdController = async (req, res) => {
 };
 exports.getPostController = async (req, res) => {
     try {
-        const post = await getPost();
+        const { page, limit } = req.query;
+        const post = await getPost(page, limit);
+        res.status(200).json(post);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: err.message || "Lỗi server ",
+        });
+    }
+};
+exports.getfindPostController = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const post = await getfindPost(postId);
         res.status(200).json(post);
     } catch (error) {
         res.status(500).json({

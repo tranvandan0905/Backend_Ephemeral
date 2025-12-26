@@ -50,9 +50,9 @@ module.exports = {
     },
       findlike: async (req, res) => {
         try {
-            const { postId } = req.params;
+            const {data} = req.body;
             const userId = req.user._id;
-            const result = await handleFindLike(postId, userId);
+            const result = await handleFindLike(data, userId);
             return res.status(200).json( result);
         } catch (error) {
             res.status(500).json({
