@@ -119,31 +119,46 @@ const createRoom = async (userId, avatar, roomData) => {
     throw new Error("Không thể tạo room");
   }
 };
-const getRoomByRoomId = async (roomId) => {
+const getRoomByRoomId = async (roomId, userId) => {
   try {
     const room = await Room.findOne({ roomId })
-      .populate("createdBy", "displayName avatarUrl");
+      .populate("createdBy", "displayName avatarUrl")
+      .populate("participant", "displayName avatarUrl")
+      .lean();
 
     if (!room) return null;
-    const roomData = {
+
+    let otherUser = null;
+
+    // Trường hợp có participant
+    if (room.participant) {
+      if (room.createdBy?._id.toString() === userId.toString()) {
+        otherUser = room.participant;
+      } else if (room.participant?._id.toString() === userId.toString()) {
+        otherUser = room.createdBy;
+      }
+    } else {
+      // Trường hợp chưa có participant
+      otherUser = room.createdBy;
+    }
+
+    return {
       roomId: room.roomId,
-      name: room.name,
-      avatar: room.avatar,
+      name: room.name || otherUser.displayName,
+      avatar: room.avatar || otherUser.avatarUrl,
       qrCode: room.qrCode,
       isPrivate: room.isPrivate,
       expiresAt: room.expiresAt,
-      createdBy: room.createdBy,
+      user: otherUser, //  chỉ trả user còn lại
       usersCount: room.usersCount,
       createdAt: room.createdAt,
-      password: room.passwordHash
     };
-
-    return roomData;
   } catch (error) {
     console.error("Lỗi trong service getRoomByRoomId:", error);
     throw error;
   }
 };
+
 const getRoomsByUserID = async (userId) => {
   try {
     const memberships = await Membership.find({

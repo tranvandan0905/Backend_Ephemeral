@@ -8,6 +8,7 @@ const FindMembershipRoomID = async (roomId, userId) => {
 
   const members = await Membership.find({ roomId: room._id })
     .populate("userId", "displayName avatarUrl")
+    .populate("roomId", "roomId")
     .lean();
 
   // Danh sách userId trong room 
@@ -74,7 +75,7 @@ const FindMembershipRoomID = async (roomId, userId) => {
       userId: m.userId._id,
       displayName: m.userId.displayName,
       avatarUrl: m.userId.avatarUrl,
-      roomId: m.roomId,
+      roomId: m.roomId.roomId,
       role: m.role,
       expiresAt: m.expiresAt,
       status: m.status,
@@ -84,7 +85,16 @@ const FindMembershipRoomID = async (roomId, userId) => {
     };
   });
 };
-
+const deleteMembership = async (roomId,userId) => {
+  const room = await findRoomID(roomId);
+  if (!room) throw new Error("Room không tồn tại");
+  const membership = await Membership.findOneAndDelete({ userId, roomId: room._id });
+  if (!membership) {
+    throw new Error("Bạn không tham gia phòng này");
+  }
+  await UpdateRoom(userId, roomId, null, { usersCount: -1 });
+  return membership;
+};
 const findMembershipUserID = async (userId, roomId) => {
 
   const result = await Membership.findOne({ userId, roomId });
@@ -112,4 +122,28 @@ const createMembership = async (userId, roomId, password) => {
 
 
 }
-module.exports = { FindMembershipRoomID, findMembershipUserID, createMembership }
+const createMembershipfriend = async (userId, roomId, Id) => {
+  const room = await findRoomID(roomId);
+  if (!room) throw new Error("Room không tồn tại");
+  if (room.createdBy != Id && !usersCount) {
+    throw new Error("Bạn không phải quản trị room");
+  }
+  const member = await findMembershipUserID(userId, room._id);
+  if (member) {
+    throw new Error("Bạn này đã tham gia phòng này rồi!");
+  }
+
+
+  const membership = new Membership({
+    roomId: room._id,
+    userId,
+    expiresAt: room.expiresAt,
+    role: "member",
+  });
+  await UpdateRoom(userId, roomId, null, { usersCount: 1 });
+  await membership.save();
+  return membership;
+
+
+}
+module.exports = { deleteMembership, createMembershipfriend, FindMembershipRoomID, findMembershipUserID, createMembership }

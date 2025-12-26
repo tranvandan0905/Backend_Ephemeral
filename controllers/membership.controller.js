@@ -1,14 +1,14 @@
-const { FindMembershipRoomID, createMembership, findMembershipUserID } = require("../services/membership.service");
+const { FindMembershipRoomID, createMembership, findMembershipUserID, createMembershipfriend, deleteMembership } = require("../services/membership.service");
 const { findRoomID } = require("../services/room.service");
 
 exports.FindMembershipRoomIDController = async (req, res) => {
     try {
         const { roomId } = req.params;
-          const userId = req.user._id;
+        const userId = req.user._id;
         if (!roomId) {
             throw new Error("Thiếu dữ liệu!")
         }
-        const membership = await FindMembershipRoomID(roomId,userId);
+        const membership = await FindMembershipRoomID(roomId, userId);
         res.status(200).json(membership)
 
     } catch (error) {
@@ -35,12 +35,47 @@ exports.createMembershipController = async (req, res) => {
             message: err.message || "Lỗi server khi tham gia phòng",
         });
     }
-};
+}
+exports.createMembershipfriendController = async (req, res) => {
+    try {
+        const Id = req.user._id;
+        const { roomId, userId } = req.body;
+        const Membership = await createMembershipfriend(userId, roomId, Id);
+        res.status(201).json({
+            success: true,
+            message: "Tham gia thành công",
+            data: Membership,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message || "Lỗi server khi tham gia phòng",
+        });
+    }
+}
+
+exports.deleteMembershipController = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+        const friend = await deleteMembership(roomId, userId);
+        res.status(201).json({
+            success: true,
+            message: "Rời nhóm thành công",
+            data: friend,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message || "Lỗi server khi xóa",
+        });
+    }
+}
 exports.findMembershipUserIDController = async (req, res) => {
     try {
         const userId = req.user._id;
-    
-        const roomId= await findRoomID(req.params.roomId)
+
+        const roomId = await findRoomID(req.params.roomId)
         const Membership = await findMembershipUserID(userId, roomId._id);
         let check = false;
         if (Membership) {
