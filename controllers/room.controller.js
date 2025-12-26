@@ -21,7 +21,8 @@ exports.createRoomController = async (req, res) => {
 exports.getRoomByRoomIdController = async (req, res) => {
     try {
         const { roomId } = req.params;
-        const roomData = await getRoomByRoomId(roomId);
+        const userId = req.user._id;
+        const roomData = await getRoomByRoomId(roomId,userId);
 
         if (!roomData) {
             return res.status(404).json({ message: "Phòng không tồn tại" });
