@@ -1,4 +1,4 @@
-const { createUser, updateavatar, searchUser, FindIDUser } = require("../services/user.service");
+const { createUser, updateavatar, searchUser, FindIDUser, updateUserAbout } = require("../services/user.service");
 
 exports.createUserController = async (req, res) => {
     try {
@@ -82,6 +82,27 @@ exports.searchUserController = async (req, res) => {
       success: false,
       message: "Có lỗi xảy ra",
       error: error.message
+    });
+  }
+};
+exports.updateUserAboutController = async (req, res) => {
+  try {
+    const userId = req.user._id; 
+
+
+    const result = await updateUserAbout(userId, req.body);
+
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error("updateUserAboutController error:", error);
+
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Cập nhật thất bại"
     });
   }
 };

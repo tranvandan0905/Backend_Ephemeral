@@ -94,4 +94,44 @@ const searchUser = async (userId, keyword) => {
 };
 
 
-module.exports = { createUser, FindIDUser, updateavatar, searchUser };
+
+const updateUserAbout = async (userId, payload) => {
+  const allowedFields = [
+    "school",
+    "currentCity",
+    "hometown",
+    "relationshipStatus",
+    "birthday",
+    "website",
+    "phoneNumber"
+  ];
+
+  const updateData = {};
+
+  allowedFields.forEach(field => {
+    if (payload[field] !== undefined) {
+      updateData[field] = payload[field];
+    }
+  });
+
+  if (Object.keys(updateData).length === 0) {
+    throw new Error("Không có dữ liệu hợp lệ để cập nhật");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { $set: updateData },
+    { new: true }
+  ).select(
+    "school currentCity hometown relationshipStatus birthday website phoneNumber"
+  );
+
+  if (!user) {
+    throw new Error("Không tìm thấy người dùng");
+  }
+
+  return user;
+};
+
+
+module.exports = { updateUserAbout,createUser, FindIDUser, updateavatar, searchUser };

@@ -7,7 +7,7 @@ const upload = multer({ storage });
 const { googleCallback, loginController } = require("../controllers/auth.controller");
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { createRoomController, getRoomByRoomIdController, findRoomController, UpdateRoomController, UpdateRoompasswordController } = require('../controllers/room.controller');
-const { createUserController, profileCOntroller, updateavatarController, searchUserController } = require('../controllers/user.controller');
+const { createUserController, profileCOntroller, updateavatarController, searchUserController, updateUserAboutController } = require('../controllers/user.controller');
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController } = require('../controllers/membership.controller');
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
@@ -33,6 +33,8 @@ router.post("/register", createUserController);
 router.post("/login", loginController)
 router.get("/profile", authenticateToken, profileCOntroller)
 router.patch("/avatar", authenticateToken, upload.single("avatarUrl"), updateavatarController)
+router.put("/about",authenticateToken,updateUserAboutController);
+
 // Message
 router.post("/message", authenticateToken, upload.single("image"), sendMessage)
 router.get("/message/:roomId", authenticateToken, getMessages)
