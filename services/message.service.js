@@ -79,8 +79,6 @@ const handegetMessagesByConversation = async (
     const query = {
         roomId: room_ID._id
     };
-
-    // 🔹 Tổng số message
     const total = await Message.countDocuments(query);
 
     const messages = await Message.find(query)
@@ -99,8 +97,6 @@ const handegetMessagesByConversation = async (
             }
         })
         .lean();
-
-
     return {
         data: messages,
         pagination: {
@@ -113,6 +109,5 @@ const handegetMessagesByConversation = async (
         }
     };
 };
-
 module.exports = { handecreateMessage, handecreateMessageShare, handegetMessagesByConversation };
 
