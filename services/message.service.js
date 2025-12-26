@@ -66,45 +66,52 @@ const handecreateMessageShare = async (postId, friendId, userId) => {
     return savedMessage
 }
 const handegetMessagesByConversation = async (
-  roomId,
-  page = 1,
-  limit = 10
+    roomId,
+    page = 1,
+    limit = 10
 ) => {
-  const room_ID = await findRoomID(roomId);
+    const room_ID = await findRoomID(roomId);
+    page = Number(page) || 1;
+    limit = Number(limit) || 10;
 
-  page = Number(page) || 1;
-  limit = Number(limit) || 10;
+    const skip = (page - 1) * limit;
 
-  const skip = (page - 1) * limit;
+    const query = {
+        roomId: room_ID._id
+    };
 
-  const query = {
-    roomId: room_ID._id
-  };
+    // 🔹 Tổng số message
+    const total = await Message.countDocuments(query);
 
-  // 🔹 Tổng số message
-  const total = await Message.countDocuments(query);
+    const messages = await Message.find(query)
+        .sort({ createdAt: -1 }) // mới → cũ
+        .skip(skip)
+        .limit(limit)
+        .select(
+            "userId postId displayName avatarUrl type text imageUrl createdAt"
+        )
+        .populate({
+            path: "postId",
+            select: "userId",
+            populate: {
+                path: "userId",
+                select: "displayName avatarUrl"
+            }
+        })
+        .lean();
 
-  // 🔹 Lấy message theo page
-  const messages = await Message.find(query)
-    .sort({ createdAt: -1 }) // mới → cũ
-    .skip(skip)
-    .limit(limit)
-    .select(
-      "userId postId displayName avatarUrl type text imageUrl createdAt"
-    )
-    .lean();
 
-  return {
-    data: messages,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      hasNextPage: page * limit < total,
-      hasPrevPage: page > 1
-    }
-  };
+    return {
+        data: messages,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page * limit < total,
+            hasPrevPage: page > 1
+        }
+    };
 };
 
 module.exports = { handecreateMessage, handecreateMessageShare, handegetMessagesByConversation };

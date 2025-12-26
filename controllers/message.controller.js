@@ -22,8 +22,9 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
     try {
         const { roomId } = req.params;
+      
         const { page, limit } = req.query;
-        const messages = await handegetMessagesByConversation(page, limit,roomId);
+        const messages = await handegetMessagesByConversation(roomId,page, limit);
         res.status(201).json(messages);
     } catch (err) {
         res.status(500).json({
