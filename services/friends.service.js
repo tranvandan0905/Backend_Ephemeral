@@ -25,10 +25,9 @@ const deleteFriend = async (friendId) => {
     return true;
 };
 
-const getFriend = async (userId, page = 1, limit = 10) => {
+const getFriend = async (userId, page = 1, limit = 10,displayName) => {
     page = Number(page) || 1;
     limit = Number(limit) || 10;
-
     const skip = (page - 1) * limit;
 
     const query = {
@@ -38,19 +37,17 @@ const getFriend = async (userId, page = 1, limit = 10) => {
         ]
     };
 
-    // tổng số bạn bè
-    const total = await Friend.countDocuments(query);
-
+    // lấy toàn bộ friend trước (chưa phân trang)
     const friends = await Friend.find(query)
         .populate([
             { path: "userId1", select: "displayName avatarUrl" },
             { path: "userId2", select: "displayName avatarUrl" }
         ])
-        .skip(skip)
-        .limit(limit)
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
 
-    const data = friends.map(f => {
+    // map ra đúng user là bạn bè
+    let mappedFriends = friends.map(f => {
         const friendUser =
             f.userId1._id.toString() === userId.toString()
                 ? f.userId2
@@ -64,6 +61,19 @@ const getFriend = async (userId, page = 1, limit = 10) => {
         };
     });
 
+    // lọc theo tên nếu có truyền displayName
+    if (displayName) {
+        const regex = new RegExp(displayName, "i"); // không phân biệt hoa thường
+        mappedFriends = mappedFriends.filter(f =>
+            regex.test(f.displayName)
+        );
+    }
+
+    const total = mappedFriends.length;
+
+    // phân trang sau khi filter
+    const data = mappedFriends.slice(skip, skip + limit);
+
     return {
         data,
         pagination: {
@@ -76,6 +86,7 @@ const getFriend = async (userId, page = 1, limit = 10) => {
         }
     };
 };
+
 
 
 module.exports = { createFriend, deleteFriend, getFriend };
