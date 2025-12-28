@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
   birthday: { type: Date },
   website: { type: String },
   phoneNumber: { type: String },
+  job: { type: String },
   lastSeen: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
 });

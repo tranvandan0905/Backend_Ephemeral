@@ -199,7 +199,7 @@ const getRoomsByUserID = async (userId) => {
           // Trường hợp chưa có participant
           otherUser = room.createdBy;
         }
-        console.log(room);
+
         if (!room) return null;
 
         const conversation = await Conversation.findOne({

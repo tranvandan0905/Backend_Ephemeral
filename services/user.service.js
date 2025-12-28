@@ -1,5 +1,6 @@
 
 const User = require('../models/user.model')
+const Room = require("../models/room.model");
 const bcrypt = require("bcryptjs");
 const Friend = require("../models/friends.model");
 const { uploadToCloudinary } = require('./cloudinary.service');
@@ -57,7 +58,7 @@ const searchUser = async (userId, keyword) => {
   if (isEmail(keyword)) {
     const user = await User.findOne({
       email: keyword.toLowerCase()
-    }).select("_id displayName avatarUrl email").lean();
+    }).select("_id displayName avatarUrl").lean();
 
     if (!user) return [];
 
@@ -66,7 +67,7 @@ const searchUser = async (userId, keyword) => {
     return [
       {
         ...user,
-        checkfriend:isFriend.status
+        checkfriend: isFriend.status
       }
     ];
   }
@@ -89,8 +90,21 @@ const searchUser = async (userId, keyword) => {
     _id: { $in: friendIds },
     displayName: { $regex: keyword, $options: "i" }
   }).select("_id displayName avatarUrl");
-
-  return users;
+  const roomsFlatten = await Promise.all(
+    users.map(async (m) => {
+      const room = await Room.findOne({
+        $or: [
+          { createdBy: userId, participant: m._id },
+          { participant: userId, createdBy: m._id }
+        ]
+      }).lean();
+      return {
+        ...m.toObject(),
+        roomId: room.roomId
+      };
+    })
+  );
+  return roomsFlatten;
 };
 
 
@@ -103,7 +117,8 @@ const updateUserAbout = async (userId, payload) => {
     "relationshipStatus",
     "birthday",
     "website",
-    "phoneNumber"
+    "phoneNumber",
+    "job",
   ];
 
   const updateData = {};
@@ -134,4 +149,4 @@ const updateUserAbout = async (userId, payload) => {
 };
 
 
-module.exports = { updateUserAbout,createUser, FindIDUser, updateavatar, searchUser };
+module.exports = { updateUserAbout, createUser, FindIDUser, updateavatar, searchUser };

@@ -40,15 +40,9 @@ const findPostID = async (_id) => {
     const result = await Post.findOne({ _id });
     return result;
 };
-const handecreateMessageShare = async (postId, friendId, userId) => {
+const handecreateMessageShare = async (postId, userId, roomId) => {
     const post = await findPostID(postId);
-    const exist = await Room.findOne({
-        $or: [
-            { participant: userId, createdBy: friendId },
-            { participant: friendId, createdBy: userId }
-        ]
-    });
-
+    const exist = await findRoomID(roomId);
     const user = await FindIDUser(userId);
     const message = new Message({
         roomId: exist._id,
@@ -109,5 +103,6 @@ const handegetMessagesByConversation = async (
         }
     };
 };
+
 module.exports = { handecreateMessage, handecreateMessageShare, handegetMessagesByConversation };
 

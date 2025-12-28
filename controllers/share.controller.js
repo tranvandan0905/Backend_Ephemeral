@@ -3,9 +3,9 @@ const { handecreateMessageShare } = require("../services/message.service");
 exports.shareController = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { postId, friendId } = req.body;
-        const message = await handecreateMessageShare(postId, friendId, userId);
-        req.io.to(message.roomId).emit("receiveMessage", message);
+        const { postId, roomId } = req.body;
+        const message = await handecreateMessageShare(postId, userId,roomId);
+        req.io.to(roomId).emit("receiveMessage", message);
         res.status(201).json({
             success: true,
             message: "Tạo message thành công",
