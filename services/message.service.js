@@ -88,7 +88,7 @@ const handegetMessagesByConversation = async (
     const total = await Message.countDocuments(query);
 
     const messages = await Message.find(query)
-        .sort({ createdAt: -1 }) // mới → cũ
+     
         .skip(skip)
         .limit(limit)
         .select(
