@@ -1,5 +1,5 @@
 
-const { handleGetLike, handlePostLike, handleDeleteLike, handleFindLike } = require('../services/like.services');
+const { handleGetLike, handlePostLike, handleDeleteLike, handleFindLike, handlecheckLike } = require('../services/like.services');
 module.exports = {
     getLike: async (req, res) => {
         try {
@@ -17,7 +17,13 @@ module.exports = {
         try {
             const userId = req.user._id;
             const { postId } = req.body;
-            await handlePostLike(postId, userId);
+            const post = await handlePostLike(postId, userId);
+            req.io.to(post.postId.userId.toString()).emit("new-notification", {
+                type: "like",
+                postId,
+                content: `${post.userId.displayName} đã thích bài viết của bạn.`,
+                createdAt: post.createdAt
+            });
             return res.status(200).json({
                 success: true,
                 message: "Like thành công!"
@@ -48,12 +54,12 @@ module.exports = {
             });
         }
     },
-      findlike: async (req, res) => {
+    findlike: async (req, res) => {
         try {
-            const {data} = req.body;
+            const { data } = req.body;
             const userId = req.user._id;
             const result = await handleFindLike(data, userId);
-            return res.status(200).json( result);
+            return res.status(200).json(result);
         } catch (error) {
             res.status(500).json({
                 success: false,
@@ -61,4 +67,17 @@ module.exports = {
             });
         }
     },
-}
+    checkLike : async (req, res) => {
+        try {
+            const userId = req.user._id;        
+            const { postId } = req.params;
+            const result = await handlecheckLike(postId, userId);
+            return res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: error.message || "Lỗi server",
+            });
+        }
+    }
+};

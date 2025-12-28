@@ -30,14 +30,20 @@ module.exports = {
         throw new Error("Thiếu dữ liệu cmt");
 
 
-      await handleCreateComment({
+      const post = await handleCreateComment({
         userId,
         postId,
         content,
         parentId,
         replyToId
       });
-
+      req.io.to(post.postId.userId.toString()).emit("new-notification", {
+        type: "comment",
+        commentId: post._id,         
+        postId: post.postId._id,
+        content: `${post.userId.displayName} đã comment bài viết của bạn.`,
+        createdAt: post.createdAt
+      });
       return res.status(200).json({
         success: true,
         message: "Bình luận thành công!"

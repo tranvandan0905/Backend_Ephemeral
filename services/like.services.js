@@ -1,20 +1,25 @@
 const Like = require('../models/like.model');
 const Post = require("../models/post.model");
 const handlePostLike = async (postId, userId) => {
-    const existing = await Like.findOne({ postId, userId });
+    const existing = await Like.findOne({ postId, userId })
+        .populate("postId", "userId content")
+        .populate("userId", "displayName avatarUrl")
+        .lean();
     if (existing) {
         throw new Error("Bạn đã like bài viết này");
     }
-
     await Like.create({ postId, userId });
-
     await Post.findByIdAndUpdate(
         postId,
         { $inc: { likesCount: 1 } },
         { new: true }
     );
+    const exist = await Like.findOne({ postId, userId })
+        .populate("postId", "userId content")
+        .populate("userId", "displayName avatarUrl")
+        .lean();
 
-    return true;
+    return exist;
 };
 const handleFindLike = async (data, userId) => {
     if (!userId) {
@@ -47,7 +52,10 @@ const handleFindLike = async (data, userId) => {
 
     return result;
 };
-
+const handlecheckLike = async (postId, userId) => {
+    const existing = await Like.findOne({ postId, userId }).lean();
+    return !!existing;
+};
 const handleDeleteLike = async (postId, userId) => {
     const deleted = await Like.findOneAndDelete({ postId, userId });
 
@@ -61,7 +69,7 @@ const handleDeleteLike = async (postId, userId) => {
         { new: true }
     );
 
-    return true; 
+    return true;
 };
 
 
@@ -75,4 +83,4 @@ const handleGetLike = async (postId) => {
         avatarUrl: r.userId.avatarUrl,
     }));
 }
-module.exports = { handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany, handleFindLike };
+module.exports = {handlecheckLike, handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany, handleFindLike };

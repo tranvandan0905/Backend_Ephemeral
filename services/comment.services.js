@@ -22,8 +22,14 @@ const handleCreateComment = async ({
       { new: true }
     );
   }
-
-  return comment;
+  if (comment) {
+    const exist = await Comment.findById(comment._id)
+      .populate("postId", "userId")
+      .populate("userId", "displayName avatarUrl")
+      .lean();
+    return exist;
+  }
+   return;
 };
 const handleGetComments = async (postId, page = 1, limit = 5) => {
   page = Number(page) || 1;
@@ -73,7 +79,7 @@ const handleGetComments = async (postId, page = 1, limit = 5) => {
 
     replyMap[key].push({
       id: r._id,
-      parentId: r.parentId, 
+      parentId: r.parentId,
       userId: r.userId._id,
       displayName: r.userId.displayName,
       avatarUrl: r.userId.avatarUrl,
@@ -87,7 +93,7 @@ const handleGetComments = async (postId, page = 1, limit = 5) => {
   // 5️⃣ Build response GIỐNG FORMAT CŨ
   const data = parents.map(c => ({
     id: c._id,
-    parentId: c._id, 
+    parentId: c._id,
     userId: c.userId._id,
     displayName: c.userId.displayName,
     avatarUrl: c.userId.avatarUrl,
