@@ -63,6 +63,12 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         share(post._id, userId, exist._id, post.content)
     ]);
     await UpdateRoomlastUpdated(roomId);
+    await Post.findByIdAndUpdate(
+        postId,
+        { $inc: { shareCount: 1 } },
+        { new: true }
+    );
+
     return savedMessage
 }
 const handegetMessagesByConversation = async (

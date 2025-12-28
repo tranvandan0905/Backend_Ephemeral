@@ -1,25 +1,25 @@
 const Post = require("../models/post.model");
 
 const createPost = async (userId, postData) => {
-    try {
-        if (!postData.content || postData.content.trim() === "") {
-            throw new Error("Nội dung bài post không được để trống");
-        }
-
-        const newPost = new Post({
-            userId,
-            content: postData.content,
-            visibility: postData.visibility || "public",
-            isDeleted: false,
-            likesCount: 0,
-            commentsCount: 0,
-        });
-
-        await newPost.save();
-        return newPost;
-    } catch (error) {
-        throw error;
+  try {
+    if (!postData.content || postData.content.trim() === "") {
+      throw new Error("Nội dung bài post không được để trống");
     }
+
+    const newPost = new Post({
+      userId,
+      content: postData.content,
+      visibility: postData.visibility || "public",
+      isDeleted: false,
+      likesCount: 0,
+      commentsCount: 0,
+    });
+
+    await newPost.save();
+    return newPost;
+  } catch (error) {
+    throw error;
+  }
 };
 const getPostByUserId = async (userId, page = 1, limit = 10) => {
   page = Number(page) || 1;
@@ -114,8 +114,10 @@ const getPost = async (page = 1, limit = 10) => {
     isDeleted: post.isDeleted,
     likesCount: post.likesCount,
     commentsCount: post.commentsCount,
+    shareCount: post.shareCount || 0,
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
+
   }));
 
   return {
@@ -132,26 +134,27 @@ const getPost = async (page = 1, limit = 10) => {
 };
 
 const getfindPost = async (postId) => {
-    const post =
-        await Post.findOne({
-            _id: postId,
-            isDeleted: false
-        })
-            .populate("userId", "displayName avatarUrl")
-    return {
-        _id: post._id,
-        userId: post.userId._id,
-        displayName: post.userId.displayName,
-        avatarUrl: post.userId.avatarUrl,
-        content: post.content,
-        visibility: post.visibility,
-        isDeleted: post.isDeleted,
-        likesCount: post.likesCount,
-        commentsCount: post.commentsCount,
-        createdAt: post.createdAt,
-        updatedAt: post.updatedAt,
-    };
+  const post =
+    await Post.findOne({
+      _id: postId,
+      isDeleted: false
+    })
+      .populate("userId", "displayName avatarUrl")
+  return {
+    _id: post._id,
+    userId: post.userId._id,
+    displayName: post.userId.displayName,
+    avatarUrl: post.userId.avatarUrl,
+    content: post.content,
+    visibility: post.visibility,
+    isDeleted: post.isDeleted,
+    likesCount: post.likesCount,
+    commentsCount: post.commentsCount,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    shareCount: post.shareCount || 0,
+  };
 }
 module.exports = {
-    createPost, getPostByUserId, getPost, getfindPost
+  createPost, getPostByUserId, getPost, getfindPost
 }

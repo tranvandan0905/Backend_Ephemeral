@@ -125,7 +125,7 @@ const createMembership = async (userId, roomId, password) => {
 const createMembershipfriend = async (userId, roomId, Id) => {
   const room = await findRoomID(roomId);
   if (!room) throw new Error("Room không tồn tại");
-  if (room.createdBy != Id && !usersCount) {
+  if (room.createdBy != Id) {
     throw new Error("Bạn không phải quản trị room");
   }
   const member = await findMembershipUserID(userId, room._id);

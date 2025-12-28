@@ -25,6 +25,7 @@ const postSchema = new mongoose.Schema(
         },
         likesCount: Number,
         commentsCount: Number,
+        shareCount: Number,
     },
     {
         timestamps: true
