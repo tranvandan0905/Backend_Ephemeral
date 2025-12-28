@@ -29,7 +29,7 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
-    await UpdateRoomlastUpdated(room_ID);
+    await UpdateRoomlastUpdated(roomId);
     const [savedMessage, _] = await Promise.all([
         message.save(),
         updateLastMessage(room_ID._id, userId, text)
@@ -44,6 +44,10 @@ const findPostID = async (_id) => {
 const handecreateMessageShare = async (postId, userId, roomId) => {
     const post = await findPostID(postId);
     const exist = await findRoomID(roomId);
+    const checkuser = await findMembershipUserID(userId, exist._id);
+    if (!checkuser) {
+        throw new Error("Bạn phải tham gia!");
+    }
     const user = await FindIDUser(userId);
     const message = new Message({
         roomId: exist._id,
@@ -51,7 +55,7 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         postId: post._id,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
-        text: post.content,
+
 
     });
     const [savedMessage, _] = await Promise.all([
@@ -86,7 +90,7 @@ const handegetMessagesByConversation = async (
         )
         .populate({
             path: "postId",
-            select: "userId",
+            select: "userId content ",
             populate: {
                 path: "userId",
                 select: "displayName avatarUrl"
