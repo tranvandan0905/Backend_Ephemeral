@@ -301,7 +301,21 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
 
 
 };
+const UpdateRoomlastUpdated = async (roomId) => {
+
+
+
+  const room = await findRoomID(roomId);
+  if (!room) throw new Error("Room không tồn tại");
+  const roomUpdateData = {
+    lastUpdated: new Date(),
+  };
+
+  await Room.updateOne({ _id: room._id }, { $set: roomUpdateData });
+
+
+};
 
 module.exports = {
-  createRoom, getRoomByRoomId, getRoomsByUserID, findRoomID, UpdateRoom, UpdateRoompassword, createRoomUser
+  createRoom, getRoomByRoomId, UpdateRoomlastUpdated, getRoomsByUserID, findRoomID, UpdateRoom, UpdateRoompassword, createRoomUser
 };

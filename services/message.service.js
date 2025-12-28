@@ -3,7 +3,7 @@ const Room = require("../models/room.model")
 const { uploadToCloudinary } = require("./cloudinary.service");
 const { updateLastMessage, share } = require("./conversation.service");
 const { findMembershipUserID } = require("./membership.service");
-const { findRoomID } = require("./room.service");
+const { findRoomID, UpdateRoomlastUpdated } = require("./room.service");
 const { FindIDUser } = require("./user.service");
 const Post = require("../models/post.model");
 const handecreateMessage = async (roomId, userId, text, image) => {
@@ -29,6 +29,7 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
+    await UpdateRoomlastUpdated(room_ID);
     const [savedMessage, _] = await Promise.all([
         message.save(),
         updateLastMessage(room_ID._id, userId, text)
@@ -57,6 +58,7 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         message.save(),
         share(post._id, userId, exist._id, post.content)
     ]);
+    await UpdateRoomlastUpdated(roomId);
     return savedMessage
 }
 const handegetMessagesByConversation = async (
