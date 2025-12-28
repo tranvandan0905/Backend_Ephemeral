@@ -11,7 +11,7 @@ const { createUserController, profileCOntroller, updateavatarController, searchU
 const { sendMessage, getMessages } = require('../controllers/message.controller');
 const { FindMembershipRoomIDController, createMembershipController, findMembershipUserIDController, createMembershipfriendController, deleteMembershipController } = require('../controllers/membership.controller');
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
-const { deleteFriendcontroller, getFriendcontroller } = require('../controllers/friends.controller');
+const { deleteFriendcontroller, getFriendcontroller, CheckFriendAddRoomcontroller } = require('../controllers/friends.controller');
 const { createPostController, getPostByUserIdController, getPostController, getfindPostController } = require('../controllers/post.controller');
 const { getLike, postlike, deletelike, findlike } = require('../controllers/like.controller');
 const { getComments, createComment, deleteComment } = require('../controllers/comment.controller');
@@ -49,7 +49,7 @@ router.get("/checkmembership/:roomId",authenticateToken,findMembershipUserIDCont
 //friend
 router.post("/friendrequest",authenticateToken,createfriendrequestController)
 router.patch("/friendrequest/:friendrequestId",authenticateToken,updatefriendrequestController)
-
+router.post('/friend/check', authenticateToken, CheckFriendAddRoomcontroller);
 router.delete("/friend/:friendId",authenticateToken,deleteFriendcontroller)
 router.get("/friend", authenticateToken, getFriendcontroller)
 

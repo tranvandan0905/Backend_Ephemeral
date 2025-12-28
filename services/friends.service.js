@@ -1,14 +1,14 @@
-const friendrequest = require("../models/friendrequest.model");
-const Friend = require("../models/friends.model");
-const { createRoomUser } = require("./room.service");
 
+const Friend = require("../models/friends.model");
+const { createRoomUser, findRoomID } = require("./room.service");
+const Membership = require("../models/membership.model");
 const createFriend = async (userId1, userId2) => {
     if (userId1 === userId2) throw new Error("Không thể kết bạn với chính mình");
 
     const exist = await Friend.findOne({
         $or: [
             { userId1: userId1, userId2: userId2 },
-            { userId1: userId2, userId2: userId1 } 
+            { userId1: userId2, userId2: userId1 }
         ]
     });
     if (exist) throw new Error("Đã là bạn bè hoặc đã tồn tại");
@@ -25,7 +25,7 @@ const deleteFriend = async (friendId) => {
     return true;
 };
 
-const getFriend = async (userId, page = 1, limit = 10,displayName) => {
+const getFriend = async (userId, page = 1, limit = 10, displayName) => {
     page = Number(page) || 1;
     limit = Number(limit) || 10;
     const skip = (page - 1) * limit;
@@ -86,7 +86,31 @@ const getFriend = async (userId, page = 1, limit = 10,displayName) => {
         }
     };
 };
+const CheckFriendAddRoom = async (dataUser, roomId) => {
+      const room = await findRoomID(roomId);
+    // lấy danh sách userId
+    const userIds = dataUser.map(item => item.userId);
 
+    // tìm membership của các user trong room này
+    const memberships = await Membership.find({
+        userId: { $in: userIds },
+        roomId: room._id
+    })
+        .select("userId")
+        .lean();
 
+    // set userId đã có trong room
+    const memberSet = new Set(
+        memberships.map(m => m.userId.toString())
+    );
 
-module.exports = { createFriend, deleteFriend, getFriend };
+    // map kết quả
+    const result = dataUser.map(item => ({
+        userId: item.userId,
+        isInRoom: memberSet.has(item.userId.toString())
+    }));
+
+    return result;
+};
+
+module.exports = {CheckFriendAddRoom, createFriend, deleteFriend, getFriend };
