@@ -1,7 +1,5 @@
 const Message = require("../models/message.model");
-const Room = require("../models/room.model")
 const { uploadToCloudinary } = require("./cloudinary.service");
-const { updateLastMessage, share } = require("./conversation.service");
 const { findMembershipUserID } = require("./membership.service");
 const { findRoomID, UpdateRoomlastUpdated } = require("./room.service");
 const { FindIDUser } = require("./user.service");
@@ -29,13 +27,9 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
-    await UpdateRoomlastUpdated(roomId);
-    const [savedMessage, _] = await Promise.all([
-        message.save(),
-        updateLastMessage(room_ID._id, userId, text)
-    ]);
-
-    return savedMessage;
+    await UpdateRoomlastUpdated(roomId, text);
+    await message.save();
+    return message;
 };
 const findPostID = async (_id) => {
     const result = await Post.findOne({ _id });
@@ -58,11 +52,9 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
 
 
     });
-    const [savedMessage, _] = await Promise.all([
-        message.save(),
-        share(post._id, userId, exist._id, post.content)
-    ]);
-    await UpdateRoomlastUpdated(roomId);
+    const savedMessage = await message.save();
+    let text = "Đã chia sẻ một bài viết";
+    await UpdateRoomlastUpdated(roomId, text);
     await Post.findByIdAndUpdate(
         postId,
         { $inc: { shareCount: 1 } },
@@ -88,7 +80,7 @@ const handegetMessagesByConversation = async (
     const total = await Message.countDocuments(query);
 
     const messages = await Message.find(query)
-     
+
         .skip(skip)
         .limit(limit)
         .select(

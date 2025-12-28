@@ -5,7 +5,12 @@ const sendMessage = async (req, res) => {
         const image = req.file;
         const { roomId, text } = req.body;
         const message = await handecreateMessage(roomId, userId, text, image);
-        req.io.to(roomId).emit("receiveMessage", message);
+        req.io.to(roomId).emit("receiveMessage", {
+            roomId,                 // string
+            message,                // message đầy đủ
+            text: message.text,     // để room list dùng
+            lastUpdated: message.createdAt
+        });
         res.status(201).json({
             success: true,
             message: "Tạo message thành công",

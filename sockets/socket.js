@@ -27,7 +27,7 @@ module.exports = (io) => {
     const userId = socket.user._id;
     onlineUsers[userId] = socket.id;
     console.log(`${userId} đã kết nối`);
-
+    socket.join(userId.toString());
     // Join room
     socket.on("joinRoom", (roomId) => {
       socket.join(roomId);

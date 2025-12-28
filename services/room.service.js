@@ -5,8 +5,6 @@ const { nanoid } = require("nanoid");
 const QRCode = require("qrcode");
 const bcrypt = require("bcryptjs");
 const { uploadToCloudinary, deleteFromCloudinary } = require("./cloudinary.service");
-const Conversation = require("../models/conversation.model");
-
 const generateRoomQRCode = async (roomId) => {
   try {
     const base = process.env.BASE_URL;
@@ -31,6 +29,7 @@ const createRoomUser = async (userId, participant) => {
       usersCount: 2,
       createdBy: userId,
       participant,
+      text: "Chưa có tin nhắn nào!"
     });
 
     await room.save();
@@ -43,12 +42,6 @@ const createRoomUser = async (userId, participant) => {
       roomId: room._id,
       userId: participant,
     });
-    const conversation = new Conversation({
-      roomId: room._id,
-      userId,
-      text: "Chưa có tin nhắn nào!"
-    })
-    await conversation.save();
     await membershipcreatedBy.save();
     await membershipparticipant.save();
     return room;
@@ -91,6 +84,7 @@ const createRoom = async (userId, avatar, roomData) => {
       isPrivate: isPrivate,
       expiresAt: expireDate,
       createdBy: userId,
+      text: "Chưa có tin nhắn nào!"
     });
 
     await room.save();
@@ -104,12 +98,6 @@ const createRoom = async (userId, avatar, roomData) => {
         expiresAt: expireDate,
         role: "creator",
       });
-      const conversation = new Conversation({
-        roomId: room._id,
-        userId,
-        text: "Chưa có tin nhắn nào!"
-      })
-      await conversation.save();
       await membership.save();
     }
 
@@ -167,7 +155,7 @@ const getRoomsByUserID = async (userId) => {
     })
       .populate({
         path: "roomId",
-        select: "roomId name avatar participant createdBy usersCount isPrivate",
+        select: "roomId name avatar participant createdBy usersCount isPrivate text lastUpdated ",
         populate: [
           {
             path: "participant",
@@ -201,21 +189,12 @@ const getRoomsByUserID = async (userId) => {
         }
 
         if (!room) return null;
-
-        const conversation = await Conversation.findOne({
-          roomId: room._id
-        })
-          .sort({ lastUpdated: -1 })
-          .populate("userId", "displayName")
-          .lean();
-
         return {
           roomId: room.roomId,
           name: room.name || otherUser?.displayName,
           avatar: room.avatar || otherUser?.avatarUrl,
-          displayName: conversation?.userId?.displayName || null,
-          text: conversation?.text || "Chưa có tin nhắn nào!",
-          lastUpdated: conversation?.lastUpdated || null,
+          text: room?.text || "Chưa có tin nhắn nào!",
+          lastUpdated: room?.lastUpdated,
         };
       })
     );
@@ -301,14 +280,13 @@ const UpdateRoompassword = async (userId, roomId, roomData = {}) => {
 
 
 };
-const UpdateRoomlastUpdated = async (roomId) => {
-
-
+const UpdateRoomlastUpdated = async (roomId, text) => {
 
   const room = await findRoomID(roomId);
   if (!room) throw new Error("Room không tồn tại");
   const roomUpdateData = {
     lastUpdated: new Date(),
+    text: text || room.text,
   };
 
   await Room.updateOne({ _id: room._id }, { $set: roomUpdateData });

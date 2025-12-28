@@ -14,6 +14,7 @@ const roomSchema = new mongoose.Schema({
   isPrivate: { type: Boolean, default: false },
   lastUpdated: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
+  text: String,
 });
 
 roomSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

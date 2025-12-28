@@ -13,7 +13,7 @@ const { FindMembershipRoomIDController, createMembershipController, findMembersh
 const { createfriendrequestController, updatefriendrequestController, getSentFriendRequestscontroller, getReceivedFriendRequestscontroller } = require('../controllers/friendrequest.controller');
 const { deleteFriendcontroller, getFriendcontroller, CheckFriendAddRoomcontroller } = require('../controllers/friends.controller');
 const { createPostController, getPostByUserIdController, getPostController, getfindPostController } = require('../controllers/post.controller');
-const { getLike, postlike, deletelike, findlike } = require('../controllers/like.controller');
+const { getLike, postlike, deletelike, findlike, checkLike } = require('../controllers/like.controller');
 const { getComments, createComment, deleteComment } = require('../controllers/comment.controller');
 const { shareController } = require('../controllers/share.controller');
 
@@ -66,6 +66,8 @@ router.get('/like/:postId',authenticateToken, getLike);
 router.post('/like',authenticateToken, postlike);
 router.delete('/like/:postId',authenticateToken, deletelike);
 router.post('/like/check', authenticateToken, findlike);
+router.get('/like/check/:postId',authenticateToken, checkLike);
+
 // Comment 
 router.get("/comment/:postId", authenticateToken,getComments);
 router.post("/comment", authenticateToken,createComment);
