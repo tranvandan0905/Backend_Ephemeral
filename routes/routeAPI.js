@@ -16,6 +16,7 @@ const { createPostController, getPostByUserIdController, getPostController, getf
 const { getLike, postlike, deletelike, findlike, checkLike } = require('../controllers/like.controller');
 const { getComments, createComment, deleteComment } = require('../controllers/comment.controller');
 const { shareController } = require('../controllers/share.controller');
+const { getNotificationController } = require('../controllers/notification.controller');
 
 const router = express.Router();
 // Google login
@@ -72,5 +73,7 @@ router.get('/like/check/:postId',authenticateToken, checkLike);
 router.get("/comment/:postId", authenticateToken,getComments);
 router.post("/comment", authenticateToken,createComment);
 router.delete("/comment/:commentId", authenticateToken,deleteComment);
+//notification
+router.get("/notification", authenticateToken, getNotificationController);
 module.exports = router;
 

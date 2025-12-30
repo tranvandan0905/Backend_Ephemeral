@@ -1,5 +1,6 @@
 const Comment = require("../models/comment.model");
 const Post = require("../models/post.model");
+const { createNotification } = require("./notification.service");
 
 const handleCreateComment = async ({
   userId,
@@ -27,7 +28,17 @@ const handleCreateComment = async ({
       .populate("postId", "userId")
       .populate("userId", "displayName avatarUrl")
       .lean();
-    return exist;
+         if (exist) {
+        await createNotification({
+        type: "comment",
+        userId: exist.userId,
+        commentId: exist._id,   
+        parentId: exist.parentId || exist._id,      
+        postId: exist.postId._id,
+        content: `${exist.userId.displayName} đã comment bài viết của bạn.`,
+        });
+    }
+    return exist; 
   }
    return;
 };

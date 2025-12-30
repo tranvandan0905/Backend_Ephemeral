@@ -39,7 +39,8 @@ module.exports = {
       });
       req.io.to(post.postId.userId.toString()).emit("new-notification", {
         type: "comment",
-        commentId: post._id,         
+        commentId: post._id,   
+        parentId: post.parentId || post._id,      
         postId: post.postId._id,
         content: `${post.userId.displayName} đã comment bài viết của bạn.`,
         createdAt: post.createdAt

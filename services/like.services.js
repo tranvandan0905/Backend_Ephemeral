@@ -1,5 +1,6 @@
 const Like = require('../models/like.model');
 const Post = require("../models/post.model");
+const { createNotification } = require('./notification.service');
 const handlePostLike = async (postId, userId) => {
     const existing = await Like.findOne({ postId, userId })
         .populate("postId", "userId content")
@@ -18,7 +19,14 @@ const handlePostLike = async (postId, userId) => {
         .populate("postId", "userId content")
         .populate("userId", "displayName avatarUrl")
         .lean();
-
+    if (exist) {
+        await createNotification({
+            type: "like",
+            userId: exist.userId,
+            postId: exist.postId._id,
+            content: `${exist.userId.displayName} đã thích bài viết của bạn.`,
+        });
+    }
     return exist;
 };
 const handleFindLike = async (data, userId) => {
@@ -83,4 +91,4 @@ const handleGetLike = async (postId) => {
         avatarUrl: r.userId.avatarUrl,
     }));
 }
-module.exports = {handlecheckLike, handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany, handleFindLike };
+module.exports = { handlecheckLike, handleGetLike, handlePostLike, handleDeleteLike, deletelikeMany, handleFindLike };
