@@ -27,15 +27,28 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
+    if (!room_ID) return null;
+
+    let otherUser = null;
+
+    // Trường hợp có participant
+    if (room_ID.participant) {
+      if (room_ID.createdBy?._id.toString() === userId.toString()) {
+        otherUser = room_ID.participant;
+      } else if (room_ID.participant?._id.toString() === userId.toString()) {
+        otherUser = room_ID.createdBy;
+      }
+    } else {
+      // Trường hợp chưa có participant
+      otherUser = room_ID.createdBy;
+    }
     const room = {
         roomId: room_ID.roomId,
         name: room_ID.name || otherUser.displayName,
         avatar: room_ID.avatar || otherUser.avatarUrl,
         lastUpdated: room_ID.lastUpdated,
-        text: room_ID?.text || "Chưa có tin nhắn nào!",
-        lastUpdated: room_ID?.lastUpdated,
-
-
+        text: text || "Chưa có tin nhắn nào!",
+        lastUpdated: new Date(),
     }
     await UpdateRoomlastUpdated(roomId, text);
     await message.save();
@@ -44,6 +57,7 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         room,
         message
     };
+
 
 };
 const findPostID = async (_id) => {
