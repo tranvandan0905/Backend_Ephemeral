@@ -17,7 +17,10 @@ const generateRoomQRCode = async (roomId) => {
   }
 };
 const findRoomID = async (roomId) => {
-  const result = await Room.findOne({ roomId });
+  const result = await Room.findOne({ roomId })
+    .populate("createdBy", "displayName avatarUrl")
+    .populate("participant", "displayName avatarUrl")
+    .lean();
   return result;
 };
 const createRoomUser = async (userId, participant) => {
