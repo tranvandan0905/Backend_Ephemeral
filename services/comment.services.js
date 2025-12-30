@@ -31,7 +31,7 @@ const handleCreateComment = async ({
          if (exist) {
         await createNotification({
         type: "comment",
-        userId: exist.userId,
+        userId: exist.postId.userId,
         commentId: exist._id,   
         parentId: exist.parentId || exist._id,      
         postId: exist.postId._id,

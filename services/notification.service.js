@@ -24,9 +24,25 @@ const createNotification = async ({
   return notification;
 };
 const getNotification = async (userId) => {
-  const result = await Notification.findOne({ userId });
-  return result;
+  const list = await Notification.find({ userId })
+    .sort({ createdAt: -1 })
+    .populate("userId", "displayName avatarUrl")
+    .lean();
+
+  return list.map((noti) => ({
+    _id: noti._id,
+    type: noti.type,
+    postId: noti.postId,
+    commentId: noti.commentId,
+    parentId: noti.parentId,
+    content: noti.content,
+    createdAt: noti.createdAt,
+    userId: noti.userId?._id,
+    displayName: noti.userId?.displayName,
+    avatarUrl: noti.userId?.avatarUrl,
+  }));
 };
+
 module.exports = {
   createNotification,
   getNotification
