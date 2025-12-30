@@ -27,9 +27,24 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         text: text || null,
         imageUrl: imageUrl || null
     });
+    const room = {
+        roomId: room_ID.roomId,
+        name: room_ID.name || otherUser.displayName,
+        avatar: room_ID.avatar || otherUser.avatarUrl,
+        lastUpdated: room_ID.lastUpdated,
+        text: room_ID?.text || "Chưa có tin nhắn nào!",
+        lastUpdated: room_ID?.lastUpdated,
+
+
+    }
     await UpdateRoomlastUpdated(roomId, text);
     await message.save();
-    return message;
+
+    return {
+        room,
+        message
+    };
+
 };
 const findPostID = async (_id) => {
     const result = await Post.findOne({ _id });
@@ -80,7 +95,7 @@ const handegetMessagesByConversation = async (
     const total = await Message.countDocuments(query);
 
     const messages = await Message.find(query)
-
+        .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .select(

@@ -4,17 +4,13 @@ const sendMessage = async (req, res) => {
         const userId = req.user._id;
         const image = req.file;
         const { roomId, text } = req.body;
-        const message = await handecreateMessage(roomId, userId, text, image);
-        req.io.to(roomId).emit("receiveMessage", {
-            roomId,                 // string
-            message,                // message đầy đủ
-            text: message.text,     // để room list dùng
-            lastUpdated: message.createdAt
-        });
+        const result = await handecreateMessage(roomId, userId, text, image);
+        req.io.to(roomId).emit("newMessage", result.message);
+        req.io.to(roomId).emit("receiveMessage", result.room);
         res.status(201).json({
             success: true,
             message: "Tạo message thành công",
-            data: message,
+            data: result.message,
         });
     } catch (err) {
         res.status(500).json({
