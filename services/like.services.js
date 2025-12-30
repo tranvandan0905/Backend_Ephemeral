@@ -22,7 +22,7 @@ const handlePostLike = async (postId, userId) => {
     if (exist) {
         await createNotification({
             type: "like",
-            userId: exist.userId,
+            userId: exist.postId.userId,
             postId: exist.postId._id,
             content: `${exist.userId.displayName} đã thích bài viết của bạn.`,
         });
