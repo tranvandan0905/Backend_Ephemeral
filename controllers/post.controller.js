@@ -32,7 +32,8 @@ exports.getPostByUserIdController = async (req, res) => {
 exports.getPostController = async (req, res) => {
     try {
         const { page, limit } = req.query;
-        const post = await getPost(page, limit);
+        const userId = req.user._id;
+        const post = await getPost(page, limit, userId);
         res.status(200).json(post);
     } catch (error) {
         res.status(500).json({
