@@ -81,6 +81,27 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
 
 
     });
+     let otherUser = null;
+
+    // Trường hợp có participant
+    if (exist.participant) {
+      if (exist.createdBy?._id.toString() === userId.toString()) {
+        otherUser = exist.participant;
+      } else if (exist.participant?._id.toString() === userId.toString()) {
+        otherUser = exist.createdBy;
+      }
+    } else {
+      // Trường hợp chưa có participant
+      otherUser = exist.createdBy;
+    }
+    const room = {
+        roomId: exist.roomId,
+        name: exist.name || otherUser.displayName,
+        avatar: exist.avatar || otherUser.avatarUrl,
+        lastUpdated: exist.lastUpdated,
+        text: text || "Chưa có tin nhắn nào!",
+        lastUpdated: new Date(),
+    }
     const savedMessage = await message.save();
     let text = "Đã chia sẻ một bài viết";
     await UpdateRoomlastUpdated(roomId, text);
@@ -90,7 +111,11 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         { new: true }
     );
 
-    return savedMessage
+    return {
+        room,
+        savedMessage
+    };
+
 }
 const handegetMessagesByConversation = async (
     roomId,
