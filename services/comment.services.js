@@ -1,6 +1,6 @@
 const Comment = require("../models/comment.model");
 const Post = require("../models/post.model");
-const { createNotification } = require("./notification.service");
+const { createNotification, findOneNotification } = require("./notification.service");
 const handleCreateComment = async ({
   userId,
   postId,
@@ -25,9 +25,11 @@ const handleCreateComment = async ({
     .lean();
 
   if (!exist) return null;
-
+  let id;
+  let userNotifyId;
   // 3. COMMENT GỐC → notify chủ post
   if (!parentId) {
+
     // tăng count
     await Post.findByIdAndUpdate(
       postId,
@@ -36,32 +38,37 @@ const handleCreateComment = async ({
 
     // không notify chính mình
     if (exist.postId.userId.toString() !== userId.toString()) {
-      await createNotification({
+      id = await createNotification({
         type: "comment",
         userId1: exist.postId.userId, //  người nhận
         userId2: userId,              //  người comment
         postId: exist.postId._id,
         commentId: exist._id,
-        content: "đã comment bài viết của bạn"
+        content: "đã bình luận bài viết của bạn"
       });
+      userNotifyId = exist.postId.userId;
     }
   }
 
   // 4. REPLY → notify người được reply
   else if (replyToId && exist.replyToId?.userId) {
     if (exist.replyToId.userId.toString() !== userId.toString()) {
-      await createNotification({
+      id = await createNotification({
         type: "comment",
         userId1: exist.replyToId.userId, // người bị reply
         userId2: userId,                 //  người reply
         postId: exist.postId._id,
         commentId: exist._id,
-        content: "đã trả lời comment của bạn"
+        content: "đã trả lời bình luận của bạn"
       });
+      userNotifyId = exist.replyToId.userId;
     }
   }
-
-  return exist;
+  if (id) {
+    const data = await findOneNotification(id._id);
+    return {data, userNotifyId};
+  }
+  return;
 };
 
 const handleGetComments = async (postId, page = 1, limit = 5) => {

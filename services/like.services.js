@@ -1,36 +1,37 @@
 const Like = require('../models/like.model');
 const Post = require("../models/post.model");
-const { createNotification, deleteNotificationsByPostAndUser } = require('./notification.service');
+const { createNotification, deleteNotificationsByPostAndUser, findOneNotification } = require('./notification.service');
 const handlePostLike = async (postId, userId) => {
 
-    await Like.create({ postId, userId });
-    await Post.findByIdAndUpdate(
+    const like = await Like.create({ postId, userId });
+
+    const post = await Post.findByIdAndUpdate(
         postId,
         { $inc: { likesCount: 1 } },
         { new: true }
-    );
-    const exist = await Like.findOne({ postId, userId })
-        .populate("postId", "userId likesCount")
-        .populate("userId", "displayName avatarUrl")
-        .lean();
+    ).populate("userId", "_id");
 
-
-    if (exist && (exist.postId.userId.toString() !== userId.toString())) {
-        const likesCount = exist.postId.likesCount;
+    if (post.userId !== userId) {
         const content =
-            likesCount === 1
+            post.likesCount === 1
                 ? "đã thích bài viết của bạn"
-                : `và ${likesCount - 1} người khác đã thích bài viết của bạn`;
-        await deleteNotificationsByPostAndUser(postId, exist.postId.userId);
-        await createNotification({
+                : `và ${post.likesCount - 1} người khác đã thích bài viết của bạn`;
+
+        await deleteNotificationsByPostAndUser(postId, post.userId);
+
+        const data = await createNotification({
             type: "like",
-            userId1: exist.postId.userId,
+            userId1: post.userId,
             userId2: userId,
-            postId: exist.postId._id,
-            content,
+            postId: post._id,
+            content
         });
+
+        if (data) {
+            const notification = await findOneNotification(data._id);
+            return { notification, userNotifyId: post.userId._id };
+        }
     }
-    return exist;
 };
 const handleFindLike = async (data, userId) => {
     if (!userId) {

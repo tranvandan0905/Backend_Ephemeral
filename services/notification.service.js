@@ -43,6 +43,27 @@ const getNotification = async (userId1) => {
     avatarUrl: noti.userId2?.avatarUrl,
   }))
 };
+const findOneNotification = async (id) => {
+  const noti = await Notification.findById(id)
+    .populate("userId2", "displayName avatarUrl")
+    .lean();
+
+  if (!noti) return null;
+
+  return {
+    _id: noti._id,
+    type: noti.type,
+    postId: noti.postId,
+    commentId: noti.commentId,
+    content: noti.content,
+    isRead: noti.isRead,
+    createdAt: noti.createdAt,
+    userId: noti.userId2?._id,
+    displayName: noti.userId2?.displayName,
+    avatarUrl: noti.userId2?.avatarUrl,
+  };
+};
+
 
 const deleteNotificationsByPostAndUser = async (postId, userId2) => {
   if (!postId || !userId2) return;
@@ -77,5 +98,6 @@ module.exports = {
   deleteNotificationsByPostAndUser,
   CheckNotificationAll,
   CheckNotification,
-  unreadCountNotification
+  unreadCountNotification,
+  findOneNotification
 };
