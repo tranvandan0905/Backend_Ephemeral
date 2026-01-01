@@ -75,8 +75,8 @@ router.post("/comment", authenticateToken,createComment);
 router.delete("/comment/:commentId", authenticateToken,deleteComment);
 //notification
 router.get("/notification", authenticateToken, getNotificationController);
-router.get("/notification/check/:id", authenticateToken, CheckNotificationController);
-router.get("/notification/checkall", authenticateToken, CheckNotificationAllController);
+router.patch("/notification/check/:id", authenticateToken, CheckNotificationController);
+router.patch("/notification/checkall", authenticateToken, CheckNotificationAllController);
 router.get("/notification/unreadcount", authenticateToken, unreadCountNotificationController);
 module.exports = router;
 

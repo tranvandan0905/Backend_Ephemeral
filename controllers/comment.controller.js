@@ -37,14 +37,9 @@ module.exports = {
         parentId,
         replyToId
       });
-      req.io.to(post.postId.userId.toString()).emit("new-notification", {
-        type: "comment",
-        commentId: post._id,   
-        parentId: post.parentId || post._id,      
-        postId: post.postId._id,
-        content: `${post.userId.displayName} đã comment bài viết của bạn.`,
-        createdAt: post.createdAt
-      });
+      if (post && post.userNotifyId) {
+        req.io.to(post.userNotifyId.toString()).emit("new-notification",post.data);
+      }
       return res.status(200).json({
         success: true,
         message: "Bình luận thành công!"
