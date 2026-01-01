@@ -1,14 +1,8 @@
 const Like = require('../models/like.model');
 const Post = require("../models/post.model");
-const { createNotification } = require('./notification.service');
+const { createNotification, deleteNotificationsByPostAndUser } = require('./notification.service');
 const handlePostLike = async (postId, userId) => {
-    const existing = await Like.findOne({ postId, userId })
-        .populate("postId", "userId content")
-        .populate("userId", "displayName avatarUrl")
-        .lean();
-    if (existing) {
-        throw new Error("Bạn đã like bài viết này");
-    }
+
     await Like.create({ postId, userId });
     await Post.findByIdAndUpdate(
         postId,
@@ -16,15 +10,24 @@ const handlePostLike = async (postId, userId) => {
         { new: true }
     );
     const exist = await Like.findOne({ postId, userId })
-        .populate("postId", "userId content")
+        .populate("postId", "userId likesCount")
         .populate("userId", "displayName avatarUrl")
         .lean();
-    if (exist) {
+
+
+    if (exist && (exist.postId.userId.toString() !== userId.toString())) {
+        const likesCount = exist.postId.likesCount;
+        const content =
+            likesCount === 1
+                ? "đã thích bài viết của bạn"
+                : `và ${likesCount - 1} người khác đã thích bài viết của bạn`;
+        await deleteNotificationsByPostAndUser(postId, exist.postId.userId);
         await createNotification({
             type: "like",
-            userId: exist.postId.userId,
+            userId1: exist.postId.userId,
+            userId2: userId,
             postId: exist.postId._id,
-            content: `${exist.userId.displayName} đã thích bài viết của bạn.`,
+            content,
         });
     }
     return exist;

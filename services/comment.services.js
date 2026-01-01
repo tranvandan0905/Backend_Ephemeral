@@ -1,7 +1,6 @@
 const Comment = require("../models/comment.model");
 const Post = require("../models/post.model");
 const { createNotification } = require("./notification.service");
-
 const handleCreateComment = async ({
   userId,
   postId,
@@ -9,6 +8,8 @@ const handleCreateComment = async ({
   parentId = null,
   replyToId = null
 }) => {
+
+  // 1. Tạo comment
   const comment = await Comment.create({
     userId,
     postId,
@@ -16,32 +17,53 @@ const handleCreateComment = async ({
     parentId,
     replyToId
   });
+
+  // 2. Lấy comment đầy đủ info
+  const exist = await Comment.findById(comment._id)
+    .populate("postId", "userId")
+    .populate("replyToId", "userId")
+    .lean();
+
+  if (!exist) return null;
+
+  // 3. COMMENT GỐC → notify chủ post
   if (!parentId) {
+    // tăng count
     await Post.findByIdAndUpdate(
       postId,
-      { $inc: { commentsCount: 1 } },
-      { new: true }
+      { $inc: { commentsCount: 1 } }
     );
-  }
-  if (comment) {
-    const exist = await Comment.findById(comment._id)
-      .populate("postId", "userId")
-      .populate("userId", "displayName avatarUrl")
-      .lean();
-         if (exist) {
-        await createNotification({
+
+    // không notify chính mình
+    if (exist.postId.userId.toString() !== userId.toString()) {
+      await createNotification({
         type: "comment",
-        userId: exist.postId.userId,
-        commentId: exist._id,   
-        parentId: exist.parentId || exist._id,      
+        userId1: exist.postId.userId, //  người nhận
+        userId2: userId,              //  người comment
         postId: exist.postId._id,
-        content: `${exist.userId.displayName} đã comment bài viết của bạn.`,
-        });
+        commentId: exist._id,
+        content: "đã comment bài viết của bạn"
+      });
     }
-    return exist; 
   }
-   return;
+
+  // 4. REPLY → notify người được reply
+  else if (replyToId && exist.replyToId?.userId) {
+    if (exist.replyToId.userId.toString() !== userId.toString()) {
+      await createNotification({
+        type: "comment",
+        userId1: exist.replyToId.userId, // người bị reply
+        userId2: userId,                 //  người reply
+        postId: exist.postId._id,
+        commentId: exist._id,
+        content: "đã trả lời comment của bạn"
+      });
+    }
+  }
+
+  return exist;
 };
+
 const handleGetComments = async (postId, page = 1, limit = 5) => {
   page = Number(page) || 1;
   limit = Number(limit) || 5;

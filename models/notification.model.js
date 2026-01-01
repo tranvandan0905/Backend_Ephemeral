@@ -1,7 +1,12 @@
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
-    userId: {
+    userId1: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "User",
+    },
+    userId2: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: "User",
@@ -14,18 +19,18 @@ const notificationSchema = new mongoose.Schema({
 
     postId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
     },
 
     commentId: {
         type: mongoose.Schema.Types.ObjectId,
     },
-    parentId: {
-        type: mongoose.Schema.Types.ObjectId,
-    },
     content: {
         type: String,
         required: true,
+    },
+    isRead: {
+        type: Boolean,
+        default: false
     },
 
     createdAt: {
@@ -33,5 +38,6 @@ const notificationSchema = new mongoose.Schema({
         default: Date.now,
     },
 });
-
+notificationSchema.index({ userId1: 1, isRead: 1 });
+notificationSchema.index({ userId1: 1, createdAt: -1 });
 module.exports = mongoose.model("Notification", notificationSchema);
