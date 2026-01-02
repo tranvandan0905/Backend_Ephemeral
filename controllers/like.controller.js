@@ -18,12 +18,10 @@ module.exports = {
             const userId = req.user._id;
             const { postId } = req.body;
             const post = await handlePostLike(postId, userId);
-            req.io.to(post.userNotifyId).emit("new-notification", post.userNotifyId);
-            console.log("like controller", post);
+            req.io.to(post.userNotifyId.toString()).emit("new-notification", post.notification);
             return res.status(200).json({
                 success: true,
                 message: "Like thành công!"
-
             });
         } catch (err) {
             res.status(500).json({

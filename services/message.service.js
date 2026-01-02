@@ -33,29 +33,49 @@ const handecreateMessage = async (roomId, userId, text, image) => {
 
     // Trường hợp có participant
     if (room_ID.participant) {
-      if (room_ID.createdBy?._id.toString() === userId.toString()) {
-        otherUser = room_ID.participant;
-      } else if (room_ID.participant?._id.toString() === userId.toString()) {
-        otherUser = room_ID.createdBy;
-      }
+        if (room_ID.createdBy?._id.toString() === userId.toString()) {
+            otherUser = room_ID.participant;
+        } else if (room_ID.participant?._id.toString() === userId.toString()) {
+            otherUser = room_ID.createdBy;
+        }
     } else {
-      // Trường hợp chưa có participant
-      otherUser = room_ID.createdBy;
+        // Trường hợp chưa có participant
+        otherUser = room_ID.createdBy;
     }
+
+    const members = await Membership.find({ roomId: room_ID._id })
+        .populate("userId", "_id")
+        .populate("roomId", "roomId")
+        .lean();
+    // const friendIds = members.map(m => m.userId._id.toString());
+    // const room = {
+    //     roomId: room_ID.roomId,
+    //     name: room_ID.name || otherUser.displayName,
+    //     avatar: room_ID.avatar || otherUser.avatarUrl,
+    //     lastUpdated: room_ID.lastUpdated,
+    //     text: text || "Chưa có tin nhắn nào!",
+    //     lastUpdated: new Date(),
+    // }
+    // await UpdateRoomlastUpdated(roomId, text);
+    // await message.save();
+    await message.save();
+    await UpdateRoomlastUpdated(roomId, text);
+
+    const friendIds = members
+        .map(m => m.userId._id.toString())
+        .filter(id => id !== userId.toString());
+
     const room = {
         roomId: room_ID.roomId,
         name: room_ID.name || otherUser.displayName,
         avatar: room_ID.avatar || otherUser.avatarUrl,
-        lastUpdated: room_ID.lastUpdated,
         text: text || "Chưa có tin nhắn nào!",
         lastUpdated: new Date(),
-    }
-    await UpdateRoomlastUpdated(roomId, text);
-    await message.save();
-
+    };
     return {
         room,
-        message
+        message,
+        friendIds
     };
 
 
@@ -81,18 +101,18 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
 
 
     });
-     let otherUser = null;
+    let otherUser = null;
 
     // Trường hợp có participant
     if (exist.participant) {
-      if (exist.createdBy?._id.toString() === userId.toString()) {
-        otherUser = exist.participant;
-      } else if (exist.participant?._id.toString() === userId.toString()) {
-        otherUser = exist.createdBy;
-      }
+        if (exist.createdBy?._id.toString() === userId.toString()) {
+            otherUser = exist.participant;
+        } else if (exist.participant?._id.toString() === userId.toString()) {
+            otherUser = exist.createdBy;
+        }
     } else {
-      // Trường hợp chưa có participant
-      otherUser = exist.createdBy;
+        // Trường hợp chưa có participant
+        otherUser = exist.createdBy;
     }
     const room = {
         roomId: exist.roomId,
