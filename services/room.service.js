@@ -202,8 +202,9 @@ const getRoomsByUserID = async (userId) => {
       })
     );
 
-    return roomsFlatten.filter(Boolean);
-
+    return roomsFlatten.sort((a, b) =>
+      new Date(b.lastUpdated) - new Date(a.lastUpdated)
+    );
   } catch (error) {
     console.error("Lỗi trong service getRoomsByUserID:", error);
     throw error;
