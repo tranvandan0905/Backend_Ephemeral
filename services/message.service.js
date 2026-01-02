@@ -1,4 +1,5 @@
 const Message = require("../models/message.model");
+const Membership = require("../models/membership.model");
 const { uploadToCloudinary } = require("./cloudinary.service");
 const { findMembershipUserID } = require("./membership.service");
 const { findRoomID, UpdateRoomlastUpdated } = require("./room.service");
@@ -47,24 +48,12 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         .populate("userId", "_id")
         .populate("roomId", "roomId")
         .lean();
-    // const friendIds = members.map(m => m.userId._id.toString());
-    // const room = {
-    //     roomId: room_ID.roomId,
-    //     name: room_ID.name || otherUser.displayName,
-    //     avatar: room_ID.avatar || otherUser.avatarUrl,
-    //     lastUpdated: room_ID.lastUpdated,
-    //     text: text || "Chưa có tin nhắn nào!",
-    //     lastUpdated: new Date(),
-    // }
-    // await UpdateRoomlastUpdated(roomId, text);
-    // await message.save();
+   
     await message.save();
     await UpdateRoomlastUpdated(roomId, text);
 
     const friendIds = members
-        .map(m => m.userId._id.toString())
-        .filter(id => id !== userId.toString());
-
+        .map(m => m.userId._id.toString()); 
     const room = {
         roomId: room_ID.roomId,
         name: room_ID.name || otherUser.displayName,
