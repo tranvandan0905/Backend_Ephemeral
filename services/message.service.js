@@ -48,12 +48,12 @@ const handecreateMessage = async (roomId, userId, text, image) => {
         .populate("userId", "_id")
         .populate("roomId", "roomId")
         .lean();
-   
+
     await message.save();
     await UpdateRoomlastUpdated(roomId, text);
 
     const friendIds = members
-        .map(m => m.userId._id.toString()); 
+        .map(m => m.userId._id.toString());
     const room = {
         roomId: room_ID.roomId,
         name: room_ID.name || otherUser.displayName,
@@ -103,7 +103,7 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         // Trường hợp chưa có participant
         otherUser = exist.createdBy;
     }
-        let text = post.content;
+    let text = post.content;
     const room = {
         roomId: exist.roomId,
         name: exist.name || otherUser.displayName,
@@ -129,48 +129,52 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
 }
 const handegetMessagesByConversation = async (
     roomId,
-    page = 1,
-    limit = 10
+    limit = 10,
+    after
 ) => {
     const room_ID = await findRoomID(roomId);
-    page = Number(page) || 1;
-    limit = Number(limit) || 10;
-
-    const skip = (page - 1) * limit;
 
     const query = {
-        roomId: room_ID._id
+        roomId: room_ID._id,
     };
-    const total = await Message.countDocuments(query);
+
+    // 👉 lấy TIN CŨ HƠN
+    if (after) {
+        query.createdAt = { $lt: new Date(after) };
+    }
 
     const messages = await Message.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .select(
-            "userId postId displayName avatarUrl type text imageUrl createdAt"
-        )
+        .sort({ createdAt: -1 }) // mới → cũ
+        .limit(limit + 1)        // +1 để check còn data không
+        .select("userId postId displayName avatarUrl type text imageUrl createdAt")
         .populate({
             path: "postId",
-            select: "userId content ",
+            select: "userId content",
             populate: {
                 path: "userId",
-                select: "displayName avatarUrl"
-            }
+                select: "displayName avatarUrl",
+            },
         })
         .lean();
+
+    const hasMore = messages.length > limit;
+    if (hasMore) messages.pop();
+
+    // ⚠️ cursor = tin CŨ NHẤT
+    const nextCursor =
+        messages.length > 0
+            ? messages[messages.length - 1].createdAt
+            : null;
+
     return {
-        data: messages,
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-            hasNextPage: page * limit < total,
-            hasPrevPage: page > 1
-        }
+        data: messages.reverse(), // 👈 cũ → mới (FE dễ append)
+        paging: {
+            nextCursor: hasMore ? nextCursor : null,
+            hasMore,
+        },
     };
 };
+
 
 module.exports = { handecreateMessage, handecreateMessageShare, handegetMessagesByConversation };
 
