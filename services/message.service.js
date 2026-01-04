@@ -103,6 +103,7 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         // Trường hợp chưa có participant
         otherUser = exist.createdBy;
     }
+        let text = post.content;
     const room = {
         roomId: exist.roomId,
         name: exist.name || otherUser.displayName,
@@ -112,7 +113,7 @@ const handecreateMessageShare = async (postId, userId, roomId) => {
         lastUpdated: new Date(),
     }
     const savedMessage = await message.save();
-    let text = "Đã chia sẻ một bài viết";
+
     await UpdateRoomlastUpdated(roomId, text);
     await Post.findByIdAndUpdate(
         postId,
