@@ -22,19 +22,39 @@ const sendMessage = async (req, res) => {
     }
 };
 
-const getMessages = async (req, res) => {
-    try {
-        const { roomId } = req.params;
+// const getMessages = async (req, res) => {
+//     try {
+//         const { roomId } = req.params;
 
-        const { page, limit } = req.query;
-        const messages = await handegetMessagesByConversation(roomId, page, limit);
-        res.status(201).json(messages);
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: err.message || "Lỗi server khi tạo user",
-        });
-    }
+//         const { page, limit } = req.query;
+//         const messages = await handegetMessagesByConversation(roomId, page, limit);
+//         res.status(201).json(messages);
+//     } catch (err) {
+//         res.status(500).json({
+//             success: false,
+//             message: err.message || "Lỗi server khi tạo user",
+//         });
+//     }
+// };
+const getMessages = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { limit, after } = req.query;
+
+    const messages = await handegetMessagesByConversation(
+      roomId,
+      Number(limit) || 10,
+      after
+    );
+
+    res.status(200).json(messages);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message || "Lỗi server",
+    });
+  }
 };
+
 
 module.exports = { sendMessage, getMessages } 

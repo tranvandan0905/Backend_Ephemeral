@@ -1,5 +1,5 @@
 
-const { createRoom, getRoomByRoomId, getRoomsByUserID, UpdateRoom, UpdateRoompassword } = require("../services/room.service");
+const { createRoom, getRoomByRoomId, getRoomsByUserID, UpdateRoom, UpdateRoompassword, searchRoom } = require("../services/room.service");
 
 exports.createRoomController = async (req, res) => {
     try {
@@ -22,7 +22,7 @@ exports.getRoomByRoomIdController = async (req, res) => {
     try {
         const { roomId } = req.params;
         const userId = req.user._id;
-        const roomData = await getRoomByRoomId(roomId,userId);
+        const roomData = await getRoomByRoomId(roomId, userId);
 
         if (!roomData) {
             return res.status(404).json({ message: "Phòng không tồn tại" });
@@ -39,8 +39,9 @@ exports.getRoomByRoomIdController = async (req, res) => {
 exports.findRoomController = async (req, res) => {
     try {
         const userId = req.user._id;
-        const roomData = await getRoomsByUserID(userId);
-        res.status(200).json( roomData)
+        const { keyword } = req.query;
+        const roomData = await getRoomsByUserID(userId, keyword);
+        res.status(200).json(roomData)
     } catch (err) {
         res.status(500).json({
             success: false,
@@ -85,3 +86,4 @@ exports.UpdateRoompasswordController = async (req, res) => {
     }
 
 }
+

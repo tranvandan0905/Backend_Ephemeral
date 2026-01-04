@@ -150,60 +150,70 @@ const getRoomByRoomId = async (roomId, userId) => {
   }
 };
 
-const getRoomsByUserID = async (userId) => {
+const getRoomsByUserID = async (userId, keyword) => {
   try {
+    const regex = keyword ? new RegExp(keyword, "i") : null;
+
     const memberships = await Membership.find({
       userId,
-      status: "active"
+      status: "active",
     })
       .populate({
         path: "roomId",
-        select: "roomId name avatar participant createdBy usersCount isPrivate text lastUpdated ",
+        select:
+          "roomId name avatar participant createdBy usersCount isPrivate text lastUpdated",
         populate: [
           {
             path: "participant",
-            select: "displayName avatarUrl"
+            select: "displayName avatarUrl",
           },
           {
             path: "createdBy",
-            select: "displayName avatarUrl"
-          }
-        ]
+            select: "displayName avatarUrl",
+          },
+        ],
       })
       .lean();
 
-
-
     if (!memberships.length) return [];
 
-    const roomsFlatten = await Promise.all(
-      memberships.map(async (membership) => {
-        let otherUser = null;
+    const roomsFlatten = memberships
+      .map((membership) => {
         const room = membership.roomId;
+        if (!room) return null;
+
+        let otherUser = null;
+
+        // 👉 room 1-1
         if (room.participant) {
           if (room.createdBy?._id.toString() === userId.toString()) {
             otherUser = room.participant;
-          } else if (room.participant?._id.toString() === userId.toString()) {
+          } else {
             otherUser = room.createdBy;
           }
         } else {
-          // Trường hợp chưa có participant
+          // 👉 group / room chỉ có createdBy
           otherUser = room.createdBy;
         }
 
-        if (!room) return null;
+        const roomName = room.name || otherUser?.displayName || "";
+
+        // 🔍 SEARCH theo keyword
+        if (regex && !regex.test(roomName)) {
+          return null;
+        }
+
         return {
           roomId: room.roomId,
-          name: room.name || otherUser?.displayName,
+          name: roomName,
           avatar: room.avatar || otherUser?.avatarUrl,
-          text: room?.text || "Chưa có tin nhắn nào!",
-          lastUpdated: room?.lastUpdated,
+          text: room.text || "Chưa có tin nhắn nào!",
+          lastUpdated: room.lastUpdated,
         };
       })
-    );
-
-    return roomsFlatten.sort((a, b) =>
-      new Date(b.lastUpdated) - new Date(a.lastUpdated)
+      .filter(Boolean); // bỏ room không match keyword
+    return roomsFlatten.sort(
+      (a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated)
     );
   } catch (error) {
     console.error("Lỗi trong service getRoomsByUserID:", error);
